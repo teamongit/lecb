@@ -1,0 +1,5 @@
+dist
+functions
+localdata
+node_modules
+functions/*firebase-adminsdk*.json
