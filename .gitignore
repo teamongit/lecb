@@ -3,3 +3,4 @@ functions
 localdata
 node_modules
 functions/*firebase-adminsdk*.json
+firebaseConfig.js
