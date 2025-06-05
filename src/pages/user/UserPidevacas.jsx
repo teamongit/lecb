@@ -1,6 +1,8 @@
+import TitlePage from "../../components/TitlePage";
+
 function UserPidevacas() {
   return (
-    <h1>UserPidevacas</h1>
+    <TitlePage texto="Pidevacas"/>
   )
 }
 

@@ -1,7 +1,7 @@
+import TitlePage from "../../components/TitlePage";
+
 export default function FurriNocturnos() {
   return (
-    <div>
-      <h1>FurriNocturnos</h1>
-    </div>
+    <TitlePage texto="Furri: Nocturnos"/>
   )
 }

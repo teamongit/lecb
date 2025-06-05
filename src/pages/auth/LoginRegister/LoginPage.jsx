@@ -5,11 +5,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { db, auth } from "../../../firebaseConfig";
-import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "firebase/auth";
 import { getDoc, doc, setDoc, deleteDoc, updateDoc, arrayRemove } from "firebase/firestore";
 import { PersonCircle } from "react-bootstrap-icons";
 
-function FormLogin({ setViewLogin }) {
+function FormLogin({ setViewLogin, setMensaje }) {
+
   const { user, userData, loading, login } = useAuth();
   const navigate = useNavigate();
 
@@ -21,6 +22,7 @@ function FormLogin({ setViewLogin }) {
 
   const Entrar = async (e) => {
     e.preventDefault();
+    setMensaje("Iniciando sesión...");
     const form = e.target;
     const email = form.elements["email"].value;
     const password = form.elements["password"].value;
@@ -29,33 +31,9 @@ function FormLogin({ setViewLogin }) {
       await login(email, password);
     } catch (error) {
       console.error("Error al iniciar sesion:", error);
-      // setMensaje("Usuario o contraseña incorrectos.");
+      setMensaje("Usuario o contraseña incorrectos.");
     }
-  };
-
-  const EntrarConGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const userDoc = await getDoc(doc(db, "USUARIOS", user.uid));
-      if (userDoc.exists()) {
-        // navigate("/dashboard");
-      } else {
-        // setFormVisible(true);
-        // setFormData({
-        //   apodo: user.displayName || "",
-        //   email: user.email || "",
-        //   uidSeleccionado: "",
-        // });
-        // setUserUid(user.uid);
-        // obtenerUidsDisponibles();
-      }
-    } catch (error) {
-      console.error("Error al iniciar sesión con Google:", error);
-      // setMensaje(`Error al iniciar sesión con Google: ${error.message}`);
-    }
-  };
+  }; 
 
   return (
     <Form onSubmit={Entrar}>
@@ -72,8 +50,8 @@ function FormLogin({ setViewLogin }) {
           <Form.Control type="password" name="password" required />
         </InputGroup>
       </Form.Group>
-
-      <Button id="btn-recordar" variant="link" className="text-secondary text-decoration-underline mb-3 p-0" type="button">
+      
+      <Button id="btn-recordar" variant="link" className="text-secondary text-decoration-underline mb-5 p-0" type="button">
         Recordar contraseña al correo
       </Button>
 
@@ -89,12 +67,6 @@ function FormLogin({ setViewLogin }) {
           </Button>
         </Col>
       </Row>
-
-      <hr />
-
-      <Button variant="danger" className="w-100 shadow mt-3" type="button" onClick={EntrarConGoogle}>
-        Iniciar sesión con Google
-      </Button>
     </Form>
   );
 }
@@ -102,7 +74,7 @@ function FormLogin({ setViewLogin }) {
 function FormRegister({ setViewLogin, setMensaje }) {
   const [nombres, setNombres] = useState([]);
 
-    useEffect(() => {
+  useEffect(() => {
     (async () => {
       try {
         const docRef = doc(db, "RESTANTES", "AAA_nombresPorRegistrar");
@@ -128,7 +100,7 @@ function FormRegister({ setViewLogin, setMensaje }) {
     const telefono = form.elements["telefono"].value.trim();
     const nombre   = form.elements["nombre"].value.trim();
 
-    if (!email || !password || !nombre) {
+    if (!email || !password || !nombre || !apodo) {
       setMensaje("Faltan datos requeridos");    
       return;
     }
@@ -200,7 +172,7 @@ function FormRegister({ setViewLogin, setMensaje }) {
       <Form.Group className="mb-3" controlId="apodo">
         <InputGroup>
           <InputGroup.Text className="w-100px">Apodo</InputGroup.Text>
-          <Form.Control type="text" name="apodo" maxLength={12} placeholder="Unico" required />
+          <Form.Control type="text" name="apodo" maxLength={12} required />
         </InputGroup>
       </Form.Group>
 
@@ -272,7 +244,7 @@ export default function LoginPage() {
           </Container>
           <br />
           {viewLogin 
-            ? <FormLogin setViewLogin={setViewLogin} /> 
+            ? <FormLogin setViewLogin={setViewLogin} setMensaje={setMensaje}/> 
             : <FormRegister setViewLogin={setViewLogin} setMensaje={setMensaje}/>
           }
           <br />

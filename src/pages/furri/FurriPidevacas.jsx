@@ -1,7 +1,7 @@
+import TitlePage from "../../components/TitlePage";
+
 export default function FurriPidevacas() {
   return (
-    <div>
-      <h1>FurriPidevacas</h1>
-    </div>
+    <TitlePage texto="Furri: Pidevacas"/>
   )
 }

@@ -1,8 +1,13 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebaseConfig";
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  signInWithPopup, 
+  GoogleAuthProvider  
+} from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
-
 
 export const AuthContext = createContext();
 
@@ -44,6 +49,8 @@ export const AuthProvider = ({ children }) => {
     });
     return () => unsubscribe();
   }, []);
+
+
 
   const login = async (email, password) => signInWithEmailAndPassword(auth, email, password);
   const logout = () => signOut(auth);

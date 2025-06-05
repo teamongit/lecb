@@ -1,5 +1,7 @@
+import TitlePage from "../../components/TitlePage";
+
 export default function AdminUsuarios() {
   return (
-    <h1>AdminUsuarios</h1>
+    <TitlePage texto="Admin: Usuarios"/>
   )
 }

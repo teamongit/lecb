@@ -1,0 +1,42 @@
+--- Version 0 : 4-jun-25
+✓ Conectado a firebase
+✓ Test de login/register
+✓ Favicon
+
+? FB Para escalar la app hay que añadir dependencia y nucleo a cada doc para consultas
+? Añadir usuarios TMA
+? useMemo contextos globales de datos para evitar nuevas consultas
+? useRef en cada pagina para evitar consultas adicionales al montar el componente
+
+--- Version 1 
+
+Dashboard:
+? Añadimos num de licencia 
+? Añadimos fecha caducidad cima
+
+Publicambios:
+pub = {
+  creado: hoy (timestamp)
+  cuando: tiempo (timestamp)
+  de: usuario que pide (nombre)
+  para: usuario asignado
+  estado: publicado / tramitado / aprobado 
+  ofrece: {
+    servicio:
+    modalidad:
+    jornada:
+    duracion:    
+  } 
+  solicita: {
+    servicio:
+    modalidad:
+    jornada: 
+  }
+  apuntados: [lista nombres]
+
+
+
+}
+
+
+

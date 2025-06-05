@@ -13,29 +13,45 @@ import {
 
 import { useAuth } from "../../../hooks/useAuth"
 
+
+const categorias = {
+"CON" : "Controlador",
+"INS" : "Instructor",
+"SUP" : "Supervisor",
+"IS"  : "Inst-Super",
+"TIN" : "Técn-Inst",
+"TS"  : "Técn-Super",
+"INY" : "Instruyendo",
+};
+
+const n = Math.floor(Math.random() * 70) + 1;
+
 const ProfileCard = () => {
   const { userData } = useAuth();
   return (
     <Container className="py-4">
       <Card className="shadow border-0 rounded-3">
-        <Card.Header className="text-center">{userData.name}</Card.Header>
+        
         <Card.Body className="p-4">
           <Row className="align-items-center mb-4">
             <Col>
-              <Image src={"https://i.pravatar.cc/150?img=68"} roundedCircle fluid className="shadow"/>
+              <Image src={`https://i.pravatar.cc/150?img=${n}`} roundedCircle fluid className="shadow"/>
             </Col>
             <Col>
               <small className="text-muted">
                 {userData.apodo}<br/>
-                {userData.email}<br/>
+                {userData.email.length > 8 
+                  ? userData.email.slice(0, 8) + '...'
+                  : userData.email}
+                <br />
                 {userData.telefono || "undefined"}<br/>
               </small>              
             </Col>            
             <Col>
               <small className="text-muted">
                 {userData.nucleo} {userData.equipo}<br/>
-                {userData.categoria}<br/>
-                {userData.licencia || "undefined"}<br/>
+                {categorias[userData.categoria]}<br/>
+                {userData.licencia || "num.licencia"}<br/>
               </small>
             </Col>
           </Row>

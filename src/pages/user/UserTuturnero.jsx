@@ -1,6 +1,8 @@
+import TitlePage from "../../components/TitlePage";
+
 function UserTuturnero() {
   return (
-    <h1>UserTuturnero</h1>
+    <TitlePage texto="Tuturnero"/>
   )
 }
 

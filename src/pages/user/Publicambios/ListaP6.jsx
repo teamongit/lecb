@@ -14,7 +14,7 @@ const obtenerMes = (fecha) =>
     year: "numeric",
   });
 
-export default function ListaHV() {
+export default function ListaP6() {
   const [publicacionesPorMes, setPublicacionesPorMes] = useState({});
   const [cargando, setCargando] = useState(true);
   const [expandedPubId, setExpandedPubId] = useState(null);
@@ -30,7 +30,7 @@ export default function ListaHV() {
     const q = query(
       collection(db, "PUBLICACIONES"),
       where("cuando", ">=", Timestamp.fromDate(hoy)),
-      where("solicita.modalidad", "==", "HV")
+      where("solicita.modalidad", "==", "P6")
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {

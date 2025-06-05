@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { Navbar, Offcanvas, Nav, Container } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Power } from 'react-bootstrap-icons';
+import { Power, CalendarWeek } from 'react-bootstrap-icons';
 import { useAuth } from "../hooks/useAuth"; 
 import TeamOnLogo from '../components/TeamOnLogo';
-
-// ... (resto del código)
 
 const NavBarItem = ({ icon, label, to, onClose }) => {
   const location = useLocation();
@@ -68,6 +66,10 @@ const NavBar = () => {
     navigate("/login", { replace: true }); 
   };
 
+  const handleDashboard = () => {
+    navigate("/dashboard", { replace: true }); 
+  }
+
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
@@ -101,8 +103,8 @@ const NavBar = () => {
             <TeamOnLogo color="white" className="me-3"/>
             <span className="text-white fs-3"> teamOn!</span>
           </Navbar.Brand>
-          <span className="ms-auto fs-5">{userData?.apodo || "Cargando..."}</span>          
-          <Power className="fs-1 ms-auto" role="button" onClick={handleLogout} />
+          <span className="ms-auto fs-5" onClick={handleDashboard}>{userData?.apodo || "Cargando..."}</span>          
+          <Power className="fs-1 ms-auto" onClick={handleLogout} />
         </Container>
       </Navbar>
       
@@ -127,7 +129,7 @@ const NavBar = () => {
         <Offcanvas.Body>
           <Nav className="flex-column">
             <NavBarItem icon="bi-person-circle" label={userData?.apodo || "Perfil"} to="/dashboard" onClose={handleClose} />
-            <NavBarItem icon="bi-1-circle" label="Publicambios" to="/user/publicambios" onClose={handleClose} />
+            <NavBarItem icon="bi-calendar-week" label="Publicambios" to="/user/publicambios" onClose={handleClose} />
             <NavBarItem icon="bi-2-circle" label="Tuturnero" to="/user/tuturnero" onClose={handleClose} />
             <NavBarItem icon="bi-3-circle" label="Nocturnos" to="/user/nocturnos" onClose={handleClose} />
             <NavBarItem icon="bi-4-circle" label="Pidevacas" to="/user/pidevacas" onClose={handleClose} />
