@@ -4,8 +4,6 @@ import {
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   signOut, 
-  signInWithPopup, 
-  GoogleAuthProvider  
 } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
 

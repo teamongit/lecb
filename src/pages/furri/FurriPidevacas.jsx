@@ -1,7 +1,7 @@
-import TitlePage from "../../components/TitlePage";
+import Titulo from "../../components/Titulo";
 
 export default function FurriPidevacas() {
   return (
-    <TitlePage texto="Furri: Pidevacas"/>
+    <Titulo texto="Furri: Pidevacas"/>
   )
 }

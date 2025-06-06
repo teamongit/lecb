@@ -1,9 +1,9 @@
 import ProfileCard from "./ProfileCard";
-import TitlePage from "../../../components/TitlePage";
+import Titulo from "../../../components/Titulo";
 export default function Dashboard() {
   return (
   <>
-    <TitlePage texto="Dashboard"/>
+    <Titulo texto="Dashboard"/>
     <ProfileCard />
   </>
   );

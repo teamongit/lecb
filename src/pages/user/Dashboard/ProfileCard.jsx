@@ -44,14 +44,14 @@ const ProfileCard = () => {
                   ? userData.email.slice(0, 8) + '...'
                   : userData.email}
                 <br />
-                {userData.telefono || "undefined"}<br/>
+                {userData.telefono || "telefono"}<br/>
               </small>              
             </Col>            
             <Col>
               <small className="text-muted">
-                {userData.nucleo} {userData.equipo}<br/>
+                {userData.nucleo} {userData.lado} {userData.equipo}<br/>
                 {categorias[userData.categoria]}<br/>
-                {userData.licencia || "num.licencia"}<br/>
+                {userData.licencia || "licencia"}<br/>
               </small>
             </Col>
           </Row>

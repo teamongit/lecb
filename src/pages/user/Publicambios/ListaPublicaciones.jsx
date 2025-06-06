@@ -7,6 +7,7 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "../../../firebaseConfig";
+import { useAuth } from "../../../context/AuthProvider";
 
 const obtenerMes = (fecha) =>
   new Date(fecha.seconds * 1000).toLocaleString("es-ES", {
@@ -14,10 +15,11 @@ const obtenerMes = (fecha) =>
     year: "numeric",
   });
 
-export default function ListaHV() {
+export default function ListaPublicaciones({ lista }) {
   const [publicacionesPorMes, setPublicacionesPorMes] = useState({});
   const [cargando, setCargando] = useState(true);
   const [expandedPubId, setExpandedPubId] = useState(null);
+  const { userData } = useAuth();
 
   const toggleExpand = (id) => {
     setExpandedPubId(expandedPubId === id ? null : id);
@@ -29,8 +31,9 @@ export default function ListaHV() {
 
     const q = query(
       collection(db, "PUBLICACIONES"),
-      where("cuando", ">=", Timestamp.fromDate(hoy)),
-      where("solicita.modalidad", "==", "HV")
+      where("fecha", ">=", Timestamp.fromDate(hoy)),
+      where("lista", "==", lista),
+      where("nucleo", "==", userData.nucleo),
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -38,7 +41,7 @@ export default function ListaHV() {
 
       snapshot.docs.forEach((doc) => {
         const data = { id: doc.id, ...doc.data() };
-        const mes = obtenerMes(data.cuando);
+        const mes = obtenerMes(data.fecha);
         if (!agrupadas[mes]) agrupadas[mes] = [];
         agrupadas[mes].push(data);
       });
@@ -46,13 +49,13 @@ export default function ListaHV() {
       const ordenadas = Object.fromEntries(
         Object.entries(agrupadas)
           .sort((a, b) => {
-            const f1 = new Date(a[1][0].cuando.seconds * 1000);
-            const f2 = new Date(b[1][0].cuando.seconds * 1000);
+            const f1 = new Date(a[1][0].fecha.seconds * 1000);
+            const f2 = new Date(b[1][0].fecha.seconds * 1000);
             return f1 - f2;
           })
           .map(([mes, pubs]) => [
             mes,
-            pubs.sort((a, b) => a.cuando.seconds - b.cuando.seconds),
+            pubs.sort((a, b) => a.fecha.seconds - b.fecha.seconds),
           ])
       );
 
@@ -60,8 +63,8 @@ export default function ListaHV() {
       setCargando(false);
     });
 
-    return () => unsubscribe(); // Limpieza al desmontar
-  }, []);
+    return () => unsubscribe();
+  }, [lista]); // <- importante: dependencia
 
   if (cargando) return <p>Cargando publicaciones...</p>;
 
@@ -75,21 +78,27 @@ export default function ListaHV() {
           {pubs.map((pub) => (
             <div key={pub.id}>
               <div
-                className={`${
-                  pub.candidatos?.length ? "bg-primary-subtle" : "bg-warning-subtle"
+                className={`d-flex justify-content-between align-items-center
+                  ${pub.candidatos?.length ? "bg-primary-subtle" : "bg-warning-subtle"
                 } rounded p-2 m-1`}
                 role="button"
                 onClick={() => toggleExpand(pub.id)}
               >
-                {new Date(pub.cuando.seconds * 1000).toLocaleDateString("es-ES", {
-                  weekday: "short",
-                  day: "numeric",
-                })}{" "}
-                {pub.solicita.jornada} {pub.solicita.tipo} {pub.solicita.funcion} {pub.de}
+                <div>
+                  {(() => {
+                    const fecha = new Date(pub.fecha.seconds * 1000);
+                    const dia = fecha.getDate();
+                    const diaSemana = fecha.toLocaleDateString("es-ES", { weekday: "short" });
+
+                    let descripcion = `${dia} ${diaSemana}`;
+                    return `${descripcion} ${pub.servicio}`;
+                  })()}
+                </div>
+                <div>{pub.apodo} {pub.nucleo} {pub.lado} {pub.equipo}</div>
               </div>
 
-              {expandedPubId === pub.id && pub.candidatos?.length > 0 &&
-                pub.candidatos.map((nombre) => (
+              {expandedPubId === pub.id &&
+                pub.candidatos?.map((nombre) => (
                   <div key={nombre} className="bg-light rounded p-2 my-1 mx-3">
                     {nombre}
                   </div>

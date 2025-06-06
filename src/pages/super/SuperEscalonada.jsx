@@ -1,7 +1,7 @@
-import TitlePage from "../../components/TitlePage";
+import Titulo from "../../components/Titulo";
 
 export default function SuperEscalonada() {
   return (
-    <TitlePage texto="Supere: Escalonada"/>
+    <Titulo texto="Supere: Escalonada"/>
   );
 }

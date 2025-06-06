@@ -1,7 +1,7 @@
-import TitlePage from "../../components/TitlePage";
+import Titulo from "../../components/Titulo";
 
 export default function SuperSectores() {
   return (
-    <TitlePage texto="Super: Sectores"/>
+    <Titulo texto="Super: Sectores"/>
   )
 }

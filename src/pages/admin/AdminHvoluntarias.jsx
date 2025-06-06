@@ -1,7 +1,7 @@
-import TitlePage from "../../components/TitlePage";
+import Titulo from "../../components/Titulo";
 
 export default function AdminHvoluntarias() {
   return (
-    <TitlePage texto="Admin: HVoluntarias"/>
+    <Titulo texto="Admin: HVoluntarias"/>
   )
 }

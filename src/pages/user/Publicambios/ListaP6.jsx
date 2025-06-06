@@ -75,17 +75,40 @@ export default function ListaP6() {
           {pubs.map((pub) => (
             <div key={pub.id}>
               <div
-                className={`${
-                  pub.candidatos ? "bg-primary-subtle" : "bg-warning-subtle"
+                className={`d-flex justify-content-between align-items-center
+                  ${pub.candidatos?.length ? "bg-primary-subtle" : "bg-warning-subtle"
                 } rounded p-2 m-1`}
                 role="button"
                 onClick={() => toggleExpand(pub.id)}
               >
-                {new Date(pub.cuando.seconds * 1000).toLocaleDateString("es-ES", {
-                  weekday: "short",
-                  day: "numeric",
-                })}{" "}
-                {pub.solicita.jornada} {pub.solicita.tipo} {pub.solicita.funcion} {pub.de}
+                <div>
+                  {(() => {
+                    const fecha = new Date(pub.cuando.seconds * 1000);
+                    const dia = fecha.getDate();
+                    const diaSemana = fecha.toLocaleDateString("es-ES", { weekday: "short" });
+
+                    let descripcion = `${dia} ${diaSemana}`;
+                    let servicio = pub.solicita.jornada;
+                    if (pub.solicita.tipo == "Corta") {
+                      servicio += "c";
+                    }
+                    if (pub.solicita.tipo == "Larga") {
+                      servicio += "l";
+                    }
+                    if (pub.solicita.funcion == "SUP") {
+                      servicio += "Sup";
+                    }
+                    if (pub.solicita.funcion == "INS") {
+                      servicio += "A2";
+                    }
+
+                    return descripcion + " " + servicio;
+                  })()}
+                </div>
+                <div>
+                 {pub.de}
+                </div>
+                
               </div>
 
               {expandedPubId === pub.id && pub.candidatos?.length > 0 &&

@@ -1,8 +1,8 @@
-import TitlePage from "../../components/TitlePage";
+import Titulo from "../../components/Titulo";
 
 function UserTuturnero() {
   return (
-    <TitlePage texto="Tuturnero"/>
+    <Titulo texto="Tuturnero"/>
   )
 }
 
