@@ -1,11 +1,8 @@
-
 import {
   Container,
   Card,
   Row,
   Col,
-  Badge,
-  ProgressBar,
   Image,
   Tab,
   Tabs,

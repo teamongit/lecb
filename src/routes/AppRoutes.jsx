@@ -10,7 +10,7 @@ import UnauthorizedPage from '../pages/auth/UnauthorizedPage';
 
 import Dashboard from '../pages/user/Dashboard/Dashboard';
 import UserNocturnos from '../pages/user/UserNocturnos';
-import PageUserPublicambios from '../pages/user/Publicambios/PageUserPublicambios';
+import Publicambios from '../pages/user/Publicambios/Publicambios';
 import UserTuturnero from '../pages/user/UserTuturnero';
 import UserPidevacas from '../pages/user/UserPidevacas';
 import AdminUsuarios from '../pages/admin/AdminUsuarios';
@@ -19,6 +19,8 @@ import FurriNocturnos from '../pages/furri/FurriNocturnos';
 import FurriPidevacas from '../pages/furri/FurriPidevacas';
 import SuperEscalonada from '../pages/super/SuperEscalonada';
 import SuperSectores from '../pages/super/SuperSectores';
+
+import { PublicacionesProvider } from "../context/PublicacionesContext";
 
 const AppRoutes = () => {
   return (
@@ -33,7 +35,14 @@ const AppRoutes = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/user/nocturnos" element={<UserNocturnos />} />
           <Route path="/user/pidevacas" element={<UserPidevacas />} />
-          <Route path="/user/publicambios" element={<PageUserPublicambios />} />
+          <Route
+            path="/user/publicambios"
+            element={
+              <PublicacionesProvider>
+                <Publicambios />
+              </PublicacionesProvider>
+            }
+          />
           <Route path="/user/tuturnero" element={<UserTuturnero />} />
 
           {/* ---- Admin Routes ---- */}
@@ -57,7 +66,7 @@ const AppRoutes = () => {
       </Route>
 
       {/* ------------- Catch-all Redirect ------------- */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/user/publicambios" replace />} />
     </Routes>
   );
 };

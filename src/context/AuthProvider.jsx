@@ -49,10 +49,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
 
-
+  const tagUsuario = userData
+  ? [userData.apodo, userData.equipo, userData.lado]
+      .filter(Boolean)
+      .join(" ")
+  : "";
   const login = async (email, password) => signInWithEmailAndPassword(auth, email, password);
   const logout = () => signOut(auth);
-  const value = { user, userData, loading, login, logout };
+  const value = { user, userData, tagUsuario, loading, login, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

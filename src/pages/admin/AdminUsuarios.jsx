@@ -1,7 +1,7 @@
-import Titulo from "../../components/Titulo";
+import { TituloH1 } from "../../components/Titulos";
 
 export default function AdminUsuarios() {
   return (
-    <Titulo texto="Admin: Usuarios"/>
+    <TituloH1 texto="Admin: Usuarios"/>
   )
 }

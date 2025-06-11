@@ -1,8 +1,8 @@
-import Titulo from "../../components/Titulo";
+import { TituloH1 } from "../../components/Titulos";
 
 function UserNocturnos() {
   return (
-    <Titulo texto="Nocturnos"/>
+    <TituloH1 texto="Nocturnos"/>
   )
 }
 

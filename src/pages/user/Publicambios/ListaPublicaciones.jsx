@@ -1,112 +1,149 @@
-import { useEffect, useState } from "react";
-import {
-  collection,
-  onSnapshot,
-  Timestamp,
-  query,
-  where,
-} from "firebase/firestore";
-import { db } from "../../../firebaseConfig";
-import { useAuth } from "../../../context/AuthProvider";
-
-const obtenerMes = (fecha) =>
-  new Date(fecha.seconds * 1000).toLocaleString("es-ES", {
-    month: "long",
-    year: "numeric",
-  });
+import { useState, useMemo, useCallback } from "react";
+import { PubItem } from "./PubItem";
+import { useAuth } from "../../../hooks/useAuth";
+import { usePublicaciones } from "../../../hooks/usePublicaciones";
 
 export default function ListaPublicaciones({ lista }) {
-  const [publicacionesPorMes, setPublicacionesPorMes] = useState({});
-  const [cargando, setCargando] = useState(true);
-  const [expandedPubId, setExpandedPubId] = useState(null);
+  const { publicaciones, loading, borrarPublicacion, editarPublicacion } = usePublicaciones();
   const { userData } = useAuth();
 
-  const toggleExpand = (id) => {
-    setExpandedPubId(expandedPubId === id ? null : id);
-  };
+  const [expandedPubId, setExpandedPubId] = useState(null);
+  const [removingId, setRemovingId] = useState(null);
 
-  useEffect(() => {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
+  const toggleExpand = useCallback(
+    (id) => setExpandedPubId((prev) => (prev === id ? null : id)),
+    []
+  );
 
-    const q = query(
-      collection(db, "PUBLICACIONES"),
-      where("fecha", ">=", Timestamp.fromDate(hoy)),
-      where("lista", "==", lista),
-      where("nucleo", "==", userData.nucleo),
-    );
+  const handleBorrarPublicacion = useCallback(async (id) => {
+    setRemovingId(id);
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const agrupadas = {};
+    setTimeout(async () => {
+      const pub = publicaciones.find((p) => p.id === id);
 
-      snapshot.docs.forEach((doc) => {
-        const data = { id: doc.id, ...doc.data() };
-        const mes = obtenerMes(data.fecha);
-        if (!agrupadas[mes]) agrupadas[mes] = [];
-        agrupadas[mes].push(data);
-      });
+      if (pub) {
+        // Buscar todas las publicaciones que tienen un candidato con pubId === id
+        const publicacionesMatch = publicaciones.filter((p) =>
+          p.candidatos?.some((c) => c.pubId === id && c.asignado)
+        );
 
-      const ordenadas = Object.fromEntries(
-        Object.entries(agrupadas)
-          .sort((a, b) => {
-            const f1 = new Date(a[1][0].fecha.seconds * 1000);
-            const f2 = new Date(b[1][0].fecha.seconds * 1000);
-            return f1 - f2;
-          })
-          .map(([mes, pubs]) => [
-            mes,
-            pubs.sort((a, b) => a.fecha.seconds - b.fecha.seconds),
-          ])
-      );
+        for (const pubMatch of publicacionesMatch) {
+          const nuevosCandidatos = pubMatch.candidatos
+            .filter((c) => c.nombre !== pub.nombre) 
+            .map((c) => ({
+              ...c,
+              asignado: c.asignado && c.pubId !== id,
+            }));
 
-      setPublicacionesPorMes(ordenadas);
-      setCargando(false);
+          const sigueAsignado = nuevosCandidatos.some((c) => c.asignado);
+          const nuevoAsignado = sigueAsignado ? pubMatch.asignado : null;
+
+          await editarPublicacion(pubMatch.id, {
+            asignado: nuevoAsignado,
+            candidatos: nuevosCandidatos,
+          });
+        }
+      }
+
+      await borrarPublicacion(id);
+      setRemovingId(null);
+    }, 500);
+  }, [publicaciones, borrarPublicacion, editarPublicacion]);
+
+
+  const handleCandidatoSeleccionado = async (candidato, pub) => {
+    const yaAsignado = candidato.asignado === true;
+    const nuevoAsignado = yaAsignado ? null : candidato.nombre ?? null;
+
+    const nuevosCandidatosArray = pub.candidatos.map((c) => ({
+      ...c,
+      asignado: yaAsignado ? false : c.nombre === candidato.nombre,
+    }));
+
+    await editarPublicacion(pub.id, {
+      asignado: nuevoAsignado,
+      candidatos: nuevosCandidatosArray,
     });
 
-    return () => unsubscribe();
-  }, [lista]); // <- importante: dependencia
+    const pubMatch = publicaciones.find((p) => p.id === candidato.pubId);
+    if (pubMatch) {
+      const nuevosCandidatosMatch = pubMatch.candidatos.map((c) => ({
+        ...c,
+        asignado: yaAsignado ? false : c.nombre === pub.nombre,
+      }));
 
-  if (cargando) return <p>Cargando publicaciones...</p>;
+      await editarPublicacion(pubMatch.id, {
+        asignado: yaAsignado ? null : pub.nombre,
+        candidatos: nuevosCandidatosMatch,
+      });
+    }
+  };
+
+  const publicacionesPorMes = useMemo(() => {
+    const agrupadas = {};
+
+    publicaciones.forEach((pub) => {
+      if (!pub.fecha?.toDate) return;
+      const mes = pub.fecha.toDate().toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      });
+
+      if (!agrupadas[mes]) agrupadas[mes] = [];
+      agrupadas[mes].push(pub);
+    });
+
+    return agrupadas;
+  }, [publicaciones]);
+
+  if (loading) return <p>Cargando publicaciones...</p>;
+
+  const contenido = Object.entries(publicacionesPorMes).map(([mes, pubs]) => {
+    const filtradas = pubs.filter((pub) => pub.lista === lista);
+    if (!filtradas.length) return null;
+
+    return (
+      <div key={mes}>
+        <h4 className="bg-secondary text-white mx-0 p-2 rounded">{mes}</h4>
+        {filtradas.map((pub) => {
+          const esPropia = pub.nombre === userData.nombre;
+          const esCandidatoSeleccionado = pub.candidatos?.some((c) => c.asignado);
+          const claseFondo = esCandidatoSeleccionado
+            ? "success"
+            : pub.candidatos?.length
+            ? "primary"
+            : "warning";
+
+          const claseAnimacion = removingId === pub.id ? "pub-salida" : "";
+
+          return (
+            <PubItem
+              key={`${pub.lista}${pub.id}`}
+              className={claseAnimacion}
+              variant={claseFondo}
+              margen="p-2 m-1"
+              pub={pub}
+              esPropia={esPropia}
+              expandedPubId={expandedPubId}
+              onToggleExpand={() => toggleExpand(pub.id)}
+              onBorrarPublicacion={() => handleBorrarPublicacion(pub.id)}
+              onToggleAsignado={(candidato) =>
+                handleCandidatoSeleccionado(candidato, pub)
+              }
+            />
+          );
+        })}
+      </div>
+    );
+  });
 
   return (
     <>
-      {Object.entries(publicacionesPorMes).map(([mes, pubs]) => (
-        <div key={mes}>
-          <h4 className="bg-secondary text-white mx-0 mt-5 p-2 rounded">
-            {mes.charAt(0).toUpperCase() + mes.slice(1)}
-          </h4>
-          {pubs.map((pub) => (
-            <div key={pub.id}>
-              <div
-                className={`d-flex justify-content-between align-items-center
-                  ${pub.candidatos?.length ? "bg-primary-subtle" : "bg-warning-subtle"
-                } rounded p-2 m-1`}
-                role="button"
-                onClick={() => toggleExpand(pub.id)}
-              >
-                <div>
-                  {(() => {
-                    const fecha = new Date(pub.fecha.seconds * 1000);
-                    const dia = fecha.getDate();
-                    const diaSemana = fecha.toLocaleDateString("es-ES", { weekday: "short" });
-
-                    let descripcion = `${dia} ${diaSemana}`;
-                    return `${descripcion} ${pub.servicio}`;
-                  })()}
-                </div>
-                <div>{pub.apodo} {pub.nucleo} {pub.lado} {pub.equipo}</div>
-              </div>
-
-              {expandedPubId === pub.id &&
-                pub.candidatos?.map((nombre) => (
-                  <div key={nombre} className="bg-light rounded p-2 my-1 mx-3">
-                    {nombre}
-                  </div>
-                ))}
-            </div>
-          ))}
-        </div>
-      ))}
+      {contenido.filter(Boolean).length ? (
+        contenido
+      ) : (
+        <span>No hay publicaciones para la lista de {lista}</span>
+      )}
     </>
   );
 }

@@ -1,28 +1,71 @@
 import { useEffect } from "react";
 import TeamOnLogo from "../../../components/TeamOnLogo";
-import { Button, Card, Form, InputGroup, Row, Col, Container } from "react-bootstrap";
+import { Button, Card, Form, InputGroup, Row, Col, Container, Alert } from "react-bootstrap";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { db, auth } from "../../../firebaseConfig";
 import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "firebase/auth";
 import { getDoc, doc, setDoc, deleteDoc, updateDoc, arrayRemove } from "firebase/firestore";
-import { PersonCircle } from "react-bootstrap-icons";
+import { PersonCircle, Eye, EyeSlash } from "react-bootstrap-icons";
+
+function PasswordInput({ label, name, value, setValue }) {
+  const [show, setShow] = useState(false);
+
+  return (
+    <Form.Group className="mb-3" controlId={name}>
+      <InputGroup>
+        <InputGroup.Text className="w-100px">{label}</InputGroup.Text>
+        <Form.Control 
+          type={show ? "text" : "password"} 
+          name="password" 
+          placeholder={label}
+          required 
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          style={{ paddingRight: "2.5rem" }}
+        />
+        {value && (
+          <span
+            onClick={() => setShow(!show)}
+            className="position-absolute top-50 end-0 translate-middle-y me-2 cursor-pointer text-secondary"
+            style={{ cursor: "pointer", zIndex: 2 }}
+          >
+            {show ? <EyeSlash /> : <Eye />}
+          </span>
+        )}
+      </InputGroup>      
+    </Form.Group>
+  );
+}
+
+const esperar = async () => {
+          console.log("Esperando...");
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              console.log("Resuelto");
+              resolve("Éxito");
+            }, 1000);
+          });
+        };
 
 function FormLogin({ setViewLogin, setMensaje }) {
-
+  const [password, setPassword] = useState("");
   const { user, userData, loading, login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && user && userData) {
-      navigate("/dashboard", { replace: true });
+      navigate("/user/publicambios", { replace: true });
     }
   }, [loading, user, userData, navigate]);
 
   const Entrar = async (e) => {
     e.preventDefault();
-    setMensaje("Iniciando sesión...");
+    setMensaje({
+      texto: "Iniciando sesión...",
+      clase: "info"
+    });
     const form = e.target;
     const email = form.elements["email"].value;
     const password = form.elements["password"].value;
@@ -31,8 +74,11 @@ function FormLogin({ setViewLogin, setMensaje }) {
       await login(email, password);
     } catch (error) {
       console.error("Error al iniciar sesion:", error);
-      setMensaje("Usuario o contraseña incorrectos.");
-    }
+      setMensaje({
+        texto: "Usuario o contraseña incorrectos",
+        clase: "danger"
+      });    
+    }  
   }; 
 
   return (
@@ -40,16 +86,10 @@ function FormLogin({ setViewLogin, setMensaje }) {
       <Form.Group className="mb-3" controlId="email">
         <InputGroup>
           <InputGroup.Text className="w-100px">Email</InputGroup.Text>
-          <Form.Control type="email" name="email" required />
+          <Form.Control type="email" name="email" placeholder="Email" required />
         </InputGroup>
       </Form.Group>
-
-      <Form.Group className="mb-3" controlId="password">
-        <InputGroup>
-          <InputGroup.Text className="w-100px">Contraseña</InputGroup.Text>
-          <Form.Control type="password" name="password" required />
-        </InputGroup>
-      </Form.Group>
+      <PasswordInput label="Contraseña" placeholder="Contraseña" name="password" value={password} setValue={setPassword} />
       
       <Button id="btn-recordar" variant="link" className="text-secondary text-decoration-underline mb-5 p-0" type="button">
         Recordar contraseña al correo
@@ -68,22 +108,23 @@ function FormLogin({ setViewLogin, setMensaje }) {
         </Col>
       </Row>
     </Form>
-  );
+  );  
 }
 
 function FormRegister({ setViewLogin, setMensaje }) {
   const [nombres, setNombres] = useState([]);
+  const [password1, setPassword1] = useState("");
+  const [password2, setPassword2] = useState("");
 
   useEffect(() => {
     (async () => {
       try {
-        const docRef = doc(db, "RESTANTES", "AAA_nombresPorRegistrar");
+        const docRef = doc(db, "USUARIOS_SIN_REGISTRAR", "0_lista");
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          const data = docSnap.data();
-          if (Array.isArray(data.nombresPorRegistrar)) {
-            setNombres(data.nombresPorRegistrar);
-          }
+          const data = docSnap.data().restantes;
+          setNombres(data);
+          
         }
       } catch (error) {
         console.error("Error al cargar nombresPorRegistrar:", error);        
@@ -93,32 +134,43 @@ function FormRegister({ setViewLogin, setMensaje }) {
 
   const Registrar = async (e) => {
     e.preventDefault();
-    const form = e.target;
-    const email    = form.elements["email"].value.trim();
-    const password = form.elements["password"].value;
-    const apodo    = form.elements["apodo"].value.trim();
-    const telefono = form.elements["telefono"].value.trim();
-    const nombre   = form.elements["nombre"].value.trim();
 
-    if (!email || !password || !nombre || !apodo) {
-      setMensaje("Faltan datos requeridos");    
+    const form = e.target;
+    const email     = form.elements["email"].value.trim();
+    const password1 = form.elements["password1"].value;
+    const password2 = form.elements["password2"].value;
+    const apodo     = form.elements["apodo"].value.trim();
+    const telefono  = form.elements["telefono"].value.trim();
+    const nombre    = form.elements["nombre"].value.trim();
+
+    console.log(apodo)
+    if (password1 !== password2) {
+      setMensaje({
+        texto: "Las contraseñas no coinciden",
+        clase: "danger"
+      }); 
+     
       return;
     }
 
     try {  
-      setMensaje("Registrando usuario...");
+      setMensaje({
+        texto: "Registrando usuario...",
+        clase: "info"
+      }); 
+      
       // 1. Registrar usuario en Firebase Authentication    
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password1);
       const user = userCredential.user;
       await updateProfile(user, { displayName: apodo });
       await sendEmailVerification(user);
       
-      // 2. Recuperar el doc temporal de RESTANTES con id == nombre    
-      const restantesDocRef = doc(db, "RESTANTES", nombre);
-      const restantesDocSnap = await getDoc(restantesDocRef);
+      // 2. Recuperar el doc temporal de control con id == nombre    
+      const usuario_sin_registrar_DocRef = doc(db, "USUARIOS_SIN_REGISTRAR", nombre);
+      const usuario_sin_registrar_DocSnap = await getDoc(usuario_sin_registrar_DocRef);
       // 3. Leer los datos del doc temporal
-      if (restantesDocSnap.exists()) {
-        const restantesData = restantesDocSnap.data();
+      if (usuario_sin_registrar_DocSnap.exists()) {
+        const usuario_sin_registrar_Data = usuario_sin_registrar_DocSnap.data();
         const usuarioData = {
           email,
           apodo,
@@ -126,28 +178,40 @@ function FormRegister({ setViewLogin, setMensaje }) {
           nombre,
           authId: user.uid,
           creadoEn: new Date(),
-          ...restantesData,
+          ...usuario_sin_registrar_Data,
         };
 
         // 4. Crear un doc en USUARIOS con los datos
         await setDoc(doc(db, "USUARIOS", nombre), usuarioData);
         // 5. Eliminar el doc temporal
-        await deleteDoc(restantesDocRef);
-        // 6. Eliminar el nombre del array "nombresPorRegistrar" en RESTANTES/AAA_nombresPorRegistrar
-        const todosDocRef = doc(db, "RESTANTES", "AAA_nombresPorRegistrar");
-        await updateDoc(todosDocRef, {
-          nombresPorRegistrar: arrayRemove(nombre)
+        await deleteDoc(usuario_sin_registrar_DocRef);
+        // 6. Eliminar el nombre del array "0_lista"
+        const listaDocRef = doc(db, "USUARIOS_SIN_REGISTRAR", "0_lista");
+        await updateDoc(listaDocRef, {
+          restantes: arrayRemove(nombre)
         });
+        
+        // const resultado = await esperar();
+        // console.log("Resultado:", resultado);
         // 5. Login
-        setMensaje("Usuario registrado con éxito.");
+        setMensaje({
+          texto: "Usuario registrado con éxito",
+          clase: "success"
+        });
         setTimeout(() => {
-          setMensaje("Redirigiendo a login...");
+          setMensaje({
+            texto: "Redirigiendo a login...",
+            clase: "success"
+          }); 
           setTimeout(() => {
             setViewLogin(true);
-            setMensaje("");
+            setMensaje({
+              texto: "",
+              clase: ""
+            }); 
           }, 2000);
         }, 2000);
-      } 
+      }    
     } catch (error) {
       console.error("Error al registrar usuario:", error);
     }
@@ -158,21 +222,19 @@ function FormRegister({ setViewLogin, setMensaje }) {
       <Form.Group className="mb-3" controlId="email">
         <InputGroup>
           <InputGroup.Text className="w-100px">Email</InputGroup.Text>
-          <Form.Control type="email" name="email" required />
+          <Form.Control type="email" name="email" placeholder="Email" required />
         </InputGroup>
       </Form.Group>
+      
+      <PasswordInput label="Contraseña" placeholder="Contraseña" name="password1" value={password1} setValue={setPassword1} />
+      <PasswordInput label="Repetir" placeholder="Repetir" name="password2" value={password2} setValue={setPassword2} />
 
-      <Form.Group className="mb-3" controlId="password">
-        <InputGroup>
-          <InputGroup.Text className="w-100px">Contraseña</InputGroup.Text>
-          <Form.Control type="password" name="password" required />
-        </InputGroup>
-      </Form.Group>
 
+      
       <Form.Group className="mb-3" controlId="apodo">
         <InputGroup>
           <InputGroup.Text className="w-100px">Apodo</InputGroup.Text>
-          <Form.Control type="text" name="apodo" maxLength={12} required />
+          <Form.Control type="text" name="apodo" placeholder="Apodo" maxLength={10} required />
         </InputGroup>
       </Form.Group>
 
@@ -215,18 +277,25 @@ function FormRegister({ setViewLogin, setMensaje }) {
 
 export default function LoginPage() {
   const [viewLogin, setViewLogin] = useState(true);
-  const [mensaje, setMensaje] = useState("");
-
+  const [mensaje, setMensaje] = useState({
+    texto: "",
+    clase: ""
+  });
+  
   const { user, userData, loading } = useAuth(); 
   const navigate = useNavigate();       
   
   useEffect(() => {
     if (!loading && user) {
       if (!user.emailVerified) {
-        setMensaje("Debes verificar tu correo antes de continuar.");
+        setMensaje({
+          texto: "Verifica tu correo antes de continuar",
+          clase: "info"
+        }); 
+        
         auth.signOut();
       } else if (userData) {
-        navigate("/dashboard");
+        navigate("/user/publicambios");
       }
     }
   }, [loading, user, userData, navigate]);
@@ -248,9 +317,9 @@ export default function LoginPage() {
             : <FormRegister setViewLogin={setViewLogin} setMensaje={setMensaje}/>
           }
           <br />
-          <Container id="mensaje-login" className="alert text-center" role="alert" >
-            {mensaje}
-          </Container>
+          <Alert variant={mensaje.clase}>
+            {mensaje.texto}
+          </Alert>
         </Card.Body>
       </Card>
       <br />

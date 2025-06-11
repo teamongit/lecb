@@ -1,7 +1,7 @@
-import Titulo from "../../components/Titulo";
+import { TituloH1 } from "../../components/Titulos";
 
 export default function FurriPidevacas() {
   return (
-    <Titulo texto="Furri: Pidevacas"/>
+    <TituloH1 texto="Furri: Pidevacas"/>
   )
 }

@@ -99,12 +99,26 @@ const NavBar = () => {
         }}        
         role="button">
         <Container fluid>
-          <Navbar.Brand onClick={handleShow}>
+          <Navbar.Brand className="d-flex align-items-center" onClick={handleShow}>
             <TeamOnLogo color="white" className="me-3"/>
-            <span className="text-white fs-3"> teamOn!</span>
+            <div className="d-flex flex-column">
+              <span className="text-white fs-3">teamOn!</span>
+              <span className="text-center" style={{ fontSize: "9px", color: "white" }}>Menú</span>
+            </div>
           </Navbar.Brand>
-          <span className="ms-auto fs-5" onClick={handleDashboard}>{userData?.apodo || "Cargando..."}</span>          
-          <Power className="fs-1 ms-auto" onClick={handleLogout} />
+          <div className="d-flex align-items-center flex-grow-1 position-relative">
+            {/* Centrado del nombre */}
+            <div className="d-flex flex-column text-center mx-auto">
+              <span className="ms-auto fs-5" onClick={handleDashboard}>{userData?.apodo || "Cargando..."}</span>              
+              <span style={{ fontSize: "9px" }}>Dashboard</span>
+            </div>
+
+            {/* Botón de salir al final con mínimo ancho */}
+            <div className="position-absolute end-0 top-50 translate-middle-y d-flex flex-column align-items-center" style={{ minWidth: "auto" }}>
+              <Power className="fs-1" onClick={handleLogout} />
+              <span style={{ fontSize: "9px" }}>Salir</span>
+            </div>
+          </div>
         </Container>
       </Navbar>
       
@@ -130,9 +144,10 @@ const NavBar = () => {
           <Nav className="flex-column">
             <NavBarItem icon="bi-person-circle" label={userData?.apodo || "Perfil"} to="/dashboard" onClose={handleClose} />
             <NavBarItem icon="bi-calendar-week" label="Publicambios" to="/user/publicambios" onClose={handleClose} />
+            {/* 
             <NavBarItem icon="bi-2-circle" label="Tuturnero" to="/user/tuturnero" onClose={handleClose} />
             <NavBarItem icon="bi-3-circle" label="Nocturnos" to="/user/nocturnos" onClose={handleClose} />
-            <NavBarItem icon="bi-4-circle" label="Pidevacas" to="/user/pidevacas" onClose={handleClose} />
+            <NavBarItem icon="bi-4-circle" label="Pidevacas" to="/user/pidevacas" onClose={handleClose} /> 
 
             {userData?.rol?.includes("admin") && (
               <NavBarSubMenu icon="bi-mortarboard-fill" label="Admin" items={adminItems} onClose={handleClose} />
@@ -145,6 +160,7 @@ const NavBar = () => {
             {userData?.rol?.includes("super") && (
               <NavBarSubMenu icon="bi-cup-hot-fill" label="Super" items={superItems} onClose={handleClose} />
             )}
+            */}
           </Nav>
         </Offcanvas.Body>
       </Navbar.Offcanvas>

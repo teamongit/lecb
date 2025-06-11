@@ -2,11 +2,10 @@
 ✓ Conectado a firebase
 ✓ Test de login/register
 ✓ Favicon
-
-? FB Para escalar la app hay que añadir dependencia y nucleo a cada doc para consultas
-? Añadir usuarios TMA
-? useMemo contextos globales de datos para evitar nuevas consultas
-? useRef en cada pagina para evitar consultas adicionales al montar el componente
+✓ Añadir dependencia, nucleo, lado
+✓ Añadir usuarios tma y ruta
+X gestionar estado mensaje 
+X gestionar estado publicacion
 
 --- Version 1 
 

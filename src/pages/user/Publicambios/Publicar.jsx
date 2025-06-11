@@ -1,236 +1,211 @@
-import { useState } from "react";
-import { useAuth } from "../../../context/AuthProvider";
-import { db } from "../../../firebaseConfig";
+import { useEffect, useMemo, useState } from "react";
+import { Timestamp } from "firebase/firestore";
 
-import { 
-  Container, 
-  ButtonGroup, 
-  Button, 
-  Form 
-} from "react-bootstrap";
-
+import { Container, Form } from "react-bootstrap";
 import { 
   BookmarkPlusFill, 
   BookmarkPlus, 
   BookmarkDashFill, 
   BookmarkDash, 
-  Bookmarks, 
-  ChevronDown, 
-  ChevronUp 
+  Bookmarks,   
 } from "react-bootstrap-icons";
 
-import { 
-  addDoc, 
-  arrayUnion, 
-  collection, 
-  doc, 
-  getDocs, 
-  query, 
-  Timestamp, 
-  updateDoc, 
-  where 
-} from "firebase/firestore";
-import Titulo from "../../../components/Titulo";
+import { TituloSmall } from "../../../components/Titulos";
+import { PubItem } from "./PubItem";
+import { ToggleGrupoBotones } from "./ToggleGrupoBotones";
+import { Comentarios } from "./Comentarios";
+import BotonEnviar from "./BotonEnviar";
+
+import { useAuth } from "../../../context/AuthProvider";
+import { formatearServicio } from "../../../utils/formatearServicio";
 
 
-export default function Publicar() {
-
-  const [fecha, setFecha] = useState(() => {
-    const hoy = new Date();
-    return hoy.toISOString().split("T")[0]; 
-  });
-  const [lista, setLista] = useState(null);
-  const [jornada, setJornada] = useState(null);
-  const [tipo, setTipo] = useState(null);
-  const [funcion, setFuncion] = useState(null);
-  const [mostrar, setMostrar] = useState(false);
-  const [comentarios, setComentarios] = useState("");
-  const [mensaje, setMensaje] = useState("");
-
-  const { userData } = useAuth();
-
-  const handleEnviar = async () => {
-    try {
-      const publicacion = {
-        creado: Timestamp.now(),
-        fecha: Timestamp.fromDate(new Date(fecha)),
-        apodo: userData.apodo,
-        nombre: userData.nombre,
-        equipo: userData.equipo,
-        nucleo: userData.nucleo,
-        lado: userData.lado,
-        estado: "publicado",        
-        lista,
-        jornada,
-        tipo,
-        funcion,
-        comentarios,        
-        candidatos: [],
-      };
-      const construirServicio = () => {
-        let servicio = jornada;
-
-        if (funcion == "IMG") {
-          servicio = "i" + servicio;
+function IconosListas({ lista, setCampo }) {
+  return (
+    <div className="d-flex justify-content-between mb-3">
+      <div 
+        className={`text-center ${lista === "HV" ? "text-primary" : "text-secondary"}`} 
+        role="button" 
+        onClick={() => setCampo("lista", "HV")}
+      >
+        {lista === "HV" 
+          ? <BookmarkPlusFill size="68" /> 
+          : <BookmarkPlus size="68" />
         }
-        // Noche
-        if (jornada == "N") {
-          // Imaginaria: añadir i
-          // RUTA: añadir letra al final
-          if (funcion == "SUP") {
-            servicio += "Sup";            
-          }
-          if (funcion == "INS") {
-            servicio += "A2";            
-          }
-          if (userData.nucleo.includes("RUTA")) {
-            servicio += userData.nucleo.slice(-1); 
-          }
-          // Salir
-          return servicio;       
-        }
-
-        if (funcion == "SUP") {
-          servicio += "Sup";
-          if (userData.nucleo.includes("RUTA")) {
-            servicio += userData.nucleo.slice(-1); 
-          }
-          return servicio;
-        }        
-        if (tipo == "Corta") {
-          servicio += "c";
-        }
-        if (tipo == "Larga") {
-          servicio += "L";
-        }
-        if (funcion == "INS") {
-          servicio += "A2";            
-        }
-        return servicio;
-      };
-      // construir servicio aquí
-      let servicio = construirServicio();
+        <div>HV</div>
+      </div>
       
-      publicacion.servicio = servicio;
-
-      // Etiqueta que identifica al usuario que publica
-      const tagUsuario = userData.apodo + " " + userData.nucleo + " " + userData.lado + " " + userData.equipo;
-
-      const inicioDelDia = new Date(fecha);
-      inicioDelDia.setHours(0, 0, 0, 0);
-
-      const finDelDia = new Date(fecha);
-      finDelDia.setHours(23, 59, 59, 999);
-      
-      const listaContraria = lista == "P6" ? "HV" : "P6";
-      const q = query(
-        collection(db, "PUBLICACIONES"),
-        where("fecha", ">=", Timestamp.fromDate(inicioDelDia)),
-        where("fecha", "<=", Timestamp.fromDate(finDelDia)),
-        where("lista", "==", listaContraria),
-        where("nucleo", "==", userData.nucleo),
-        where("jornada", "==", jornada)
-      );
-
-      const snapshot = await getDocs(q);
-
-      if (!snapshot.empty) {
-        setMensaje("Hay candidatos para tu petición de " + lista);
-        for (const docSnap of snapshot.docs) {
-          const ref = doc(db, "PUBLICACIONES", docSnap.id);
-
-          // Añadir a candidatos del otro documento
-          await updateDoc(ref, {
-            candidatos: arrayUnion(tagUsuario),
-          });
-
-          // Añadir al array local de candidatos si no está ya
-          const tagCandidato = docSnap.data().apodo + " " + docSnap.data().nucleo + " " + docSnap.data().lado + " " + docSnap.data().equipo;
-          
-          if (!publicacion.candidatos.includes(tagCandidato)) {
-            publicacion.candidatos.push(tagCandidato);
-          }
+      <div 
+        className={`text-center ${lista === "P6" ? "text-primary" : "text-secondary"}`} 
+        role="button" 
+        onClick={() => setCampo("lista", "P6")}
+      >
+        {lista === "P6" 
+          ? <BookmarkDashFill size="68" /> 
+          : <BookmarkDash size="68" />
         }
-      } else {
-        setMensaje("Publicado con éxito (sin candidatos compatibles)");
-      }
-      await addDoc(collection(db, "PUBLICACIONES"), publicacion);
-    } catch (err) {
-      setMensaje("Error al guardar la publicación.");
-      console.log(err)
-    }
+        <div>P6</div>
+      </div>
+
+      <div className="text-center text-secondary text-decoration-line-through">
+        <Bookmarks size="68" />
+        <div>Cambio</div>
+      </div>
+    </div>
+  );
+}
+
+function CampoFecha({ pub, setCampo }) {
+  return (
+    <>
+      <TituloSmall texto="Fecha" />
+      <Form.Control
+        className="mb-3"
+        type="date"
+        value={pub.fecha.toDate().toISOString().split("T")[0]}
+        onChange={(e) => {
+          const nuevaFecha = Timestamp.fromDate(new Date(e.target.value));
+          setCampo("fecha", nuevaFecha);
+        }}
+      />
+    </>
+  );
+}
+
+function CampoJornada({ pub, setCampo }) {
+  return (
+    <>
+      <TituloSmall texto="Jornada" />
+      <ToggleGrupoBotones
+        opciones={[
+          { texto: "M", valor: "M" },
+          { texto: "T", valor: "T" },
+          { texto: "N", valor: "N" },
+        ]}
+        valorActual={pub.jornada}
+        onClick={(nuevoValor) => setCampo("jornada", nuevoValor)}
+      />
+    </>
+  );
+}
+
+function CampoTipo({ pub, setCampo, setDesplegarComentarios }) {
+  const handleClick = (nuevoValor) => {
+    setCampo("tipo", nuevoValor);
+    setDesplegarComentarios(nuevoValor === "otro");
+
   };
 
   return (
-    <Container className="w-75 p-3">
-      <div className="d-flex justify-content-between mb-3">
-        <div className={`text-center ${lista === "HV" ? "text-primary" : "text-secondary"}`} role="button" onClick={() => setLista("HV")}>
-          {lista === "HV" 
-            ? <BookmarkPlusFill size="68" /> 
-            : <BookmarkPlus size="68" />
-          }
-          <div>HV</div>
-        </div>
-        <div className={`text-center ${lista === "P6" ? "text-primary" : "text-secondary"}`} role="button" onClick={() => setLista("P6")}>
-          {lista === "P6" 
-            ? <BookmarkDashFill size="68" /> 
-            : <BookmarkDash size="68" />
-          }
-          <div>P6</div>
-        </div>
-        <div className="text-center text-secondary text-decoration-line-through">
-          <Bookmarks size="68" />
-          <div>Cambio</div>
-        </div>
-      </div>
+    <>
+      <TituloSmall texto="Tipo de servicio" />
+      <ToggleGrupoBotones
+        opciones={[
+          { texto: "Corto", valor: "c" },
+          { texto: "Largo", valor: "L" },
+          { texto: "Otro", valor: "otro" },
+        ]}
+        valorActual={pub.tipo}
+        onClick={handleClick}
+      />
+    </>
+  );
+}
+
+function CampoFuncion({ pub, setCampo }) {
+  return (
+    <>
+      <TituloSmall texto="Funcion" />
+      <ToggleGrupoBotones
+        opciones={[
+          { texto: "SUP", valor: "Sup" },
+          { texto: "INS", valor: "A2" },
+          { texto: "IMG", valor: "i" },
+        ]}
+        valorActual={pub.funcion}
+        onClick={(nuevoValor) => setCampo("funcion", nuevoValor)}
+      />
+    </>
+  );
+}
+
+export default function Publicar() {
+  const { userData } = useAuth();
+   
+   // Estado para nueva publicación
+  const hoy = useMemo(() => {
+    const d = new Date();
+    d.setHours(12, 0, 0, 0);
+    return d;
+  }, []);
+  const nuevaPublicacion = (camposConValor = {}) => ({
+    creado: Timestamp.now(),
+    fecha: Timestamp.fromDate(new Date(hoy)),
+    apodo: userData?.apodo || "",
+    nombre: userData?.nombre || "",
+    nucleo: userData?.nucleo || "",
+    equipo: userData?.equipo || "",
+    lado: userData?.lado || "",
+    lista: null,
+    jornada: null,
+    tipo: null,
+    funcion: null,
+    servicio: null,
+    comentarios: "",
+    estado: "publicado",
+    candidatos: [],
+    asignado: null,
+    ...camposConValor
+  });
+  const [pub, setPub] = useState(nuevaPublicacion());
+  const [otra, setOtra] = useState(false);
+  const [key, setKey] = useState(Date.now());
+
+  const [desplegarComentarios, setDesplegarComentarios] = useState(false);
+  
+  const setCampo = (clave, valor) => {
+    if (otra) {
+      setPub(nuevaPublicacion({ [clave]: valor }));
+      setKey(Date.now());
+      setOtra(false);
+    } else {
+      setPub((prev) => ({
+        ...prev,
+        [clave]: valor,
+        ...(clave === "tipo" ? { comentarios: "" } : {}),
+      }));
+    }
+  };
+
+  useEffect(() => {
+    const { jornada, tipo, funcion, lado } = pub;
+    setPub((prev) => ({ ...prev, servicio: formatearServicio(jornada, tipo, funcion, lado) }));
+  }, [pub.jornada, pub.tipo, pub.funcion, pub.lado]);
+  
+
+    
+  
+  
+  return (
+    <Container className="p-3">
       
-      <Titulo tag="small" texto="Fecha" color="text-secondary" tamano="text-07" margen="m-0"/>
-      <Form.Control className="mb-3 btn-group" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+      <IconosListas lista={pub.lista} setCampo={setCampo} />
+      <CampoFecha   pub={pub} setCampo={setCampo} />
+      <CampoJornada pub={pub} setCampo={setCampo} />
+      <CampoTipo    pub={pub} setCampo={setCampo} setDesplegarComentarios={setDesplegarComentarios} />
+      <CampoFuncion pub={pub} setCampo={setCampo} />
+      <Comentarios  pub={pub} setCampo={setCampo} desplegarComentarios={desplegarComentarios} setDesplegarComentarios={setDesplegarComentarios} />
       
-      <Titulo tag="small" texto="Jornada" color="text-secondary" tamano="text-07" margen="m-0"/>
-      <ButtonGroup className="w-100 mb-3">
-        {["M", "T", "N"].map((t) => (
-          <Button key={t} className="w-33" variant={jornada === t ? "outline-primary" : "outline-secondary"} active={jornada === t} onClick={() => setJornada(t)}>
-            {t}
-          </Button>
-        ))}
-      </ButtonGroup>
+      <BotonEnviar pub={pub} onSuccess={(pubEnviada) => {setPub(pubEnviada); setOtra(true);}} />
 
-      <Titulo tag="small" texto="Tipo" color="text-secondary" tamano="text-07" margen="m-0"/>
-      <ButtonGroup className="w-100 mb-3 btn-group">
-        {["Corta", "Larga", "Otro"].map((t) => (
-          <Button key={t} className="w-33" variant={tipo === t ? "outline-primary" : "outline-secondary"} active={tipo === t} onClick={() => setTipo(tipo === t ? null : t)}>
-            {t}
-          </Button>
-        ))}
-      </ButtonGroup>
-
-      <Titulo tag="small" texto="Funcion" color="text-secondary" tamano="text-07" margen="m-0"/>
-      <ButtonGroup className="w-100 mb-3 btn-group">
-        {["SUP", "INS", "IMG"].map((t) => (
-          <Button key={t} className="w-33" variant={funcion === t ? "outline-primary" : "outline-secondary"} active={funcion === t} onClick={() => setFuncion(funcion === t ? null : t)}>
-            {t}
-          </Button>
-        ))}
-      </ButtonGroup>
-
-      <Titulo tag="small" texto="Comentarios" color="text-secondary" tamano="text-07" margen="m-0"/>
-      <Form.Group controlId="comentariosDesplegables">
-        <div onClick={() => setMostrar(!mostrar)} style={{ cursor: "pointer" }} className="text-center mb-2">
-          {mostrar 
-            ? <ChevronUp /> 
-            : <ChevronDown />
-          }
-        </div>
-
-        {mostrar && <Form.Control as="textarea" rows={3} placeholder="...opcional" onChange={(e) => setComentarios(e.target.value)} />}
-      </Form.Group>
-
-      <Button className="my-3 w-100" disabled={!(lista && fecha && jornada)} onClick={handleEnviar}>
-        Enviar
-      </Button>
+      <TituloSmall texto={`Enviar publicación a ${userData.nucleo}`} />
+      <PubItem 
+        key={key}
+        pub={pub} 
+        mostrarComentarios={false}
+        expandedPubId={pub.id}
+      />
       <br />
-      {mensaje}
     </Container>
   );
 }
