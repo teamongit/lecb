@@ -26,21 +26,20 @@ export const AuthProvider = ({ children }) => {
       }
       
       try {
-        // 1. Recuperar el doc de USUARIOS con authId
-        const q = query(collection(db, "USUARIOS"), where("authId", "==", authUser.uid));
+        // 1. Recuperar el doc de USUARIOS con uid
+        const q = query(collection(db, "USUARIOS"), where("uid", "==", authUser.uid));
         const querySnapshot = await getDocs(q);
         // 2. Leer los datos del doc del usuario
-        let loadedUserData = null;
-        if (!querySnapshot.empty) {
-          loadedUserData = querySnapshot.docs[0].data();
-        }
+        const loadedUserData = querySnapshot.empty 
+          ? null 
+          : querySnapshot.docs[0].data();         
         // 3. Set datos en el contexto
         setUserData(loadedUserData);
         setUser(authUser);
         setLoading(false);
 
       } catch (error) {
-        console.error("Error fetching user data:", error); 
+        console.error("Error al obtener los datos de usuario:", error); 
         setUserData(null);
         setUser(null);
       }
@@ -48,15 +47,9 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-
-  const tagUsuario = userData
-  ? [userData.apodo, userData.equipo, userData.lado]
-      .filter(Boolean)
-      .join(" ")
-  : "";
   const login = async (email, password) => signInWithEmailAndPassword(auth, email, password);
   const logout = () => signOut(auth);
-  const value = { user, userData, tagUsuario, loading, login, logout };
+  const value = { user, userData, loading, login, logout };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -6,30 +6,83 @@ import {
   Image,
   Tab,
   Tabs,
+  Alert,
 } from 'react-bootstrap';
 
-import { useAuth } from "../../../hooks/useAuth"
-
-
+import { useAuth } from "../../../hooks/useAuth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../../firebaseConfig";
+import { useEffect, useState } from 'react';
+import { formatearFecha } from "../../../utils/fechas";
 const categorias = {
-"CON" : "Controlador",
-"INS" : "Instructor",
-"SUP" : "Supervisor",
-"IS"  : "Inst-Super",
-"TIN" : "Técn-Inst",
-"TS"  : "Técn-Super",
-"INY" : "Instruyendo",
+  CON : "Controlador",
+  INS : "Instructor",
+  SUP : "Supervisor",
+  IS  : "Inst-Super",
+  TIN : "Técn-Inst",
+  TS  : "Técn-Super",
+  INY : "Instruyendo",
 };
 
 const n = Math.floor(Math.random() * 70) + 1;
+const SiguientesTurnos = ({ nombre }) => {
+  const [fechas, setFechas] = useState([]);
+
+  useEffect(() => {
+    const cargarTurnos = async () => {
+      try {
+        const docRef = doc(db, 'TURNOS', nombre);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const hoy = new Date();
+          const resultados = [];
+
+          for (let i = 0; i <= 7; i++) {
+            const fecha = new Date(hoy);
+            fecha.setDate(hoy.getDate() + i);
+
+            const yyyy = fecha.getFullYear();
+            const mm = String(fecha.getMonth() + 1).padStart(2, '0');
+            const dd = String(fecha.getDate()).padStart(2, '0');
+            const clave = `${yyyy}-${mm}-${dd}`;
+
+            const valor = data[clave] ?? 'L';
+            resultados.push([clave, valor]);
+          }
+
+          setFechas(resultados);
+        }
+      } catch (error) {
+        console.error('Error al recuperar turnos:', error);
+      }
+    };
+
+    cargarTurnos();
+  }, [nombre]);
+
+  return (
+    <div className="d-flex justify-content-between flex-grow flex-wrap gap-1">
+      {fechas.map(([fecha, valor], idx) => (
+        <Alert key={idx} variant="light" className="m-1 p-1 w-60px fs-07">
+          <div><strong>{formatearFecha(fecha,"numDia")}</strong></div>
+          <div>{valor}</div>
+        </Alert>
+      ))}
+    </div>
+  );
+};
+
+
 
 const ProfileCard = () => {
   const { userData } = useAuth();
   return (
-    <Container className="py-4">
+    <Container className="pb-4">
       <Card className="shadow border-0 rounded-3">
         
-        <Card.Body className="p-4">
+        <Card.Body className="p-3">
           <Row className="align-items-center mb-4">
             <Col>
               <Image src={`https://i.pravatar.cc/150?img=${n}`} roundedCircle fluid className="shadow"/>
@@ -46,7 +99,7 @@ const ProfileCard = () => {
             </Col>            
             <Col>
               <small className="text-muted">
-                {userData.nucleo} {userData.lado} {userData.equipo}<br/>
+                {userData.nucleo} {userData.equipo}<br/>
                 {categorias[userData.categoria]}<br/>
                 {userData.licencia || "licencia"}<br/>
               </small>
@@ -54,15 +107,8 @@ const ProfileCard = () => {
           </Row>
           <hr />
           <Tabs defaultActiveKey="servicios" id="user-info-tabs" className="mb-3" fill>
-            <Tab eventKey="servicios" title="Serv">
-              <h5>Contenido de Servicios (año)</h5>
-              <ul>
-                <li>Siguientes 8 servicios</li>
-                <li>imaginarias activadas vs total</li>
-                <li>Servicios jornada larga</li>
-                <li>Puntuacion bolsa</li>
-              </ul>
-              
+            <Tab eventKey="servicios" title="Turnos">
+              <SiguientesTurnos nombre={userData.nombre} />             
             </Tab>
             <Tab eventKey="horas" title="Horas">
               <h5>Contenido de Horas</h5>

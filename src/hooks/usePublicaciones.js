@@ -14,107 +14,78 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { useAuth } from "../hooks/useAuth";
+import { anadirCandidatos, esDuplicado, esMatch } from "../utils/publicaciones";
 
 export const usePublicaciones = () => {
   const { userData } = useAuth();
   const [publicaciones, setPublicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
-  const listaContraria = { P6: "HV", HV: "P6" };
-  // Listener tiempo real
+  // CRUD básico de publicaciones
+  
+  // Read Publicaciones filtradas (query): Listener tiempo real
   useEffect(() => {
-    if (!userData?.nucleo) return;
+    // if (!userData) return;
 
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
+    // TODO: En el futuro cambiar si solo somos compatibles dentro del mismo nucleo
+    const nucleos = userData.nucleo.includes("RUTA")
+      ? ["RUTAE", "RUTAW"]
+      : ["TMA"];
 
     const q = query(
       collection(db, "PUBLICACIONES"),
       where("fecha", ">=", Timestamp.fromDate(hoy)),
-      where("nucleo", "==", userData.nucleo),
+      where("nucleo", "in", nucleos),
       orderBy("fecha", "asc")
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setPublicaciones(docs);
+      // Añadimos el campo id del doc a cada publicacion
+      const docsPublicaciones = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setPublicaciones(docsPublicaciones);
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [userData]);
+  }, []);
 
-  // CRUD básico
-  const agregarPublicacion = async (nuevaPub) => {
-    
+  // Create Publicacion con candidatos compatibles y actualizar publicaciones existentes añadiendo al usuario como candidato
+  const agregarPublicacion = async (nuevaPub) => {    
     try {
-      // Buscar duplicados localmente
-      const yaExiste = publicaciones.some((pub) => {
-        return (
-          pub.nombre === nuevaPub.nombre &&
-          pub.lista === nuevaPub.lista &&
-          pub.jornada === nuevaPub.jornada &&
-          pub.fecha.toDate().getTime() === nuevaPub.fecha.toDate().getTime()
-        );
-      });
-
-      if (yaExiste) {
+      // Buscar duplicados localmente: No agregar publicacion
+      if (esDuplicado(publicaciones, nuevaPub)) {
         return "duplicado";
       }
-
-      // Añadir candidato compatible
-      const contraria = listaContraria[nuevaPub.lista];
-      const pubsCandidatos = publicaciones.filter((pub) => {
-        const hayAsignado = pub.candidatos.some(c => c.asignado);
-        const mismaFecha =  pub.fecha.toDate().getTime() === nuevaPub.fecha.toDate().getTime();
-        const mismoNucleo = pub.nucleo  === nuevaPub.nucleo;
-        const mismoLado = nuevaPub.jornada === "N" ? pub.lado === nuevaPub.lado : true;
-        const turnoCompatible = (pub.jornada === nuevaPub.jornada || pub.servicio === nuevaPub.servicio);
-        return (
-          pub.lista === contraria &&
-          mismaFecha &&
-          mismoNucleo &&
-          mismoLado &&
-          !hayAsignado &&
-          turnoCompatible
-        );
+      // Agregar publicacion
+      // Filtrar publicaciones existentes compatibles
+      const pubsMatch = publicaciones.filter(pub => { 
+        return esMatch(pub, nuevaPub);
       });
 
-      // Añadir candidatos a la pub que estamos creando (nuevaPub)
-      if (pubsCandidatos.length) {
-        nuevaPub.candidatos = pubsCandidatos.map((pubCandidato) => ({
-          nombre:   pubCandidato.nombre,
-          lista:    pubCandidato.lista,
-          apodo:    pubCandidato.apodo,          
-          equipo:   pubCandidato.equipo,
-          lado:     pubCandidato.lado,
-          jornada:  pubCandidato.jornada,
-          servicio: pubCandidato.servicio,
-          pubId:    pubCandidato.id,
-          asignado: false,
-        }));
+      // 1. Añadir candidatos a nuevaPub
+      if (pubsMatch.length) {
+        anadirCandidatos(pubsMatch, nuevaPub);
       }
-
       const colRef = collection(db, "PUBLICACIONES");
       const docRef = await addDoc(colRef, nuevaPub);
 
-      // Añadirme como candidato a los docs que ya existen
-      for (const pubCandidato of pubsCandidatos) {
-        const docCandidatoRef = doc(db, "PUBLICACIONES", pubCandidato.id);
-        await updateDoc(docCandidatoRef, {
+      // 2. Añadir usuario que publica como candidato a las publicaciones que ya existen: en firestore y en local
+      for (const pubMatch of pubsMatch) {
+        const docMatchRef = doc(db, "PUBLICACIONES", pubMatch.id);
+        await updateDoc(docMatchRef, {
           candidatos: arrayUnion({            
             nombre:   nuevaPub.nombre,
-            lista:    nuevaPub.lista,
             apodo:    nuevaPub.apodo,
             equipo:   nuevaPub.equipo,
-            lado:     nuevaPub.lado,
-            jornada:  nuevaPub.jornada,
-            servicio: nuevaPub.servicio,
+            nucleo:   nuevaPub.nucleo,
+            turno:    nuevaPub.ofrece.turno,
             pubId:    docRef.id,
             asignado: false,
           }),
         });
       }
-      
+      // TODO: Para que devolvemos esto?
       return { id: docRef.id, ...nuevaPub };
 
     } catch (error) {
@@ -123,22 +94,43 @@ export const usePublicaciones = () => {
     }
   };
 
-
-  const borrarPublicacion = async (pubId) => {
+  const editarPublicacion = async (id, datosActualizados) => {
     try {
-      await deleteDoc(doc(db, "PUBLICACIONES", pubId));
+      await updateDoc(doc(db, "PUBLICACIONES", id), datosActualizados);
     } catch (error) {
-      console.error("Error al borrar publicación:", error);
+      console.error("Error al editar publicación:", error);
       throw error;
     }
   };
 
-  const editarPublicacion = async (pubId, datosActualizados) => {
-
+  const borrarPublicacion = async (id) => {
     try {
-      await updateDoc(doc(db, "PUBLICACIONES", pubId), datosActualizados);
+      const borrarPub = publicaciones.find(p => p.id === id);
+      
+      if (borrarPub) {
+        
+        // Filtrar publicaciones donde usuario es candidato
+        const publicacionesMatch = publicaciones.filter(p =>          
+          p.candidatos.some(c => c.pubId === id)
+        );
+
+        for (const pubMatch of publicacionesMatch) {          
+          // Si usuario es asignado cambiar estado
+          const esAsignado = pubMatch.candidatos.some(c => c.pubId === id && c.asignado)
+          // Filtrar candidatos para eliminar a usuario
+          const nuevosCandidatos  = pubMatch.candidatos.filter(c => c.pubId !== id);
+          const nuevosDatosPubMatch = {
+            candidatos: nuevosCandidatos,
+          };
+          if (esAsignado) {
+            nuevosDatosPubMatch.estado = "publicado";
+          }          
+          await editarPublicacion(pubMatch.id, nuevosDatosPubMatch);
+        }
+      }
+      await deleteDoc(doc(db, "PUBLICACIONES", id));
     } catch (error) {
-      console.error("Error al editar publicación:", error);
+      console.error("Error al borrar publicación:", error);
       throw error;
     }
   };

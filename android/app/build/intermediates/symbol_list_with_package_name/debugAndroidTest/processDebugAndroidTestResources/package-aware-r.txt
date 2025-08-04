@@ -1,3 +1,0 @@
-com.teamon.app.test
-style WhiteBackgroundDialogTheme
-style WhiteBackgroundTheme

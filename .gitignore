@@ -2,6 +2,7 @@ dist
 functions
 localdata
 excel
+info
 node_modules
-functions/*firebase-adminsdk*.json
+functions
 firebaseConfig.js

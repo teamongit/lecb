@@ -5,7 +5,7 @@ import { ROLES } from '../utils/constants';
 import PrivateLayout from './PrivateLayout';
 import AuthGuard from './AuthGuard';
 
-import LoginPage from '../pages/auth/LoginRegister/LoginPage';
+import LoginPage from '../pages/auth/LoginPage';
 import UnauthorizedPage from '../pages/auth/UnauthorizedPage';
 
 import Dashboard from '../pages/user/Dashboard/Dashboard';

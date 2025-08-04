@@ -56,19 +56,16 @@ const NavBarSubMenu = ({ icon, label, items, onClose }) => {
 };
 
 const NavBar = () => {
-  const { userData, logout } = useAuth();
   const navigate = useNavigate();
-  
   const [show, setShow] = useState(false);
+  const { userData, logout, loading } = useAuth();
+  
+  if (loading) return null;
 
   const handleLogout = async () => {
     await logout();  
     navigate("/login", { replace: true }); 
   };
-
-  const handleDashboard = () => {
-    navigate("/dashboard", { replace: true }); 
-  }
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
@@ -89,54 +86,30 @@ const NavBar = () => {
     { label: "Sectores", icon: "bi-2-circle", link: "/super/sectores" }
   ];
 
+  const userLabel = `${userData.apodo} ${userData.nucleo} ${userData.equipo}`;
   return (
     <>
-      <Navbar 
-        className="text-dark p-3 mb-3 shadow"
-        bg="light" 
-        style={{
-          backgroundImage: "linear-gradient(135deg, #3a67b1 50%, white 50%)",
-        }}        
-        role="button">
-        <Container fluid>
-          <Navbar.Brand className="d-flex align-items-center" onClick={handleShow}>
-            <TeamOnLogo color="white" className="me-3"/>
+      <Navbar className="text-dark p-2 mb-3 shadow px-3" bg="dark" data-bs-theme="dark">
+        <Container fluid className="d-flex align-items-center">
+          <Navbar.Brand onClick={handleShow} className="d-flex gap-3 align-items-center" role="button">
+            <TeamOnLogo className="fs-3"/>
             <div className="d-flex flex-column">
-              <span className="text-white fs-3">teamOn!</span>
-              <span className="text-center" style={{ fontSize: "9px", color: "white" }}>Menú</span>
+              <span className="text-white">teamOn!</span>
+              <span className="text-white-50 fs-07">{userLabel}</span>
             </div>
           </Navbar.Brand>
-          <div className="d-flex align-items-center flex-grow-1 position-relative">
-            {/* Centrado del nombre */}
-            <div className="d-flex flex-column text-center mx-auto">
-              <span className="ms-auto fs-5" onClick={handleDashboard}>{userData?.apodo || "Cargando..."}</span>              
-              <span style={{ fontSize: "9px" }}>Dashboard</span>
-            </div>
-
-            {/* Botón de salir al final con mínimo ancho */}
-            <div className="position-absolute end-0 top-50 translate-middle-y d-flex flex-column align-items-center" style={{ minWidth: "auto" }}>
-              <Power className="fs-1" onClick={handleLogout} />
-              <span style={{ fontSize: "9px" }}>Salir</span>
-            </div>
-          </div>
+            <Power className="text-white fs-1" onClick={handleLogout} role="button"/>
         </Container>
       </Navbar>
       
-      <Navbar.Offcanvas
-        id="offcanvasNavbar"
-        aria-labelledby="offcanvasNavbarLabel"
-        show={show}
-        onHide={handleClose}
-        placement="start"
-      >
-        <Offcanvas.Header 
-          className="bg-light" 
-          closeButton 
-          style={{
-            backgroundImage: "linear-gradient(135deg, #3a67b1 50%, white 50%)",
-          }}>
-          <Offcanvas.Title id="offcanvasNavbarLabel" className="text-white">
-            Menú
+      <Navbar.Offcanvas show={show} onHide={handleClose}>
+        <Offcanvas.Header closeButton className="bg-dark text-white"> 
+          <Offcanvas.Title className="d-flex gap-3 align-items-center">
+            <TeamOnLogo className="fs-3"/>
+            <div className="d-flex flex-column">
+              <span className="text-white">Menú</span>
+              <span className="text-white-50 fs-07">teamOn!</span>
+            </div>
           </Offcanvas.Title>
         </Offcanvas.Header>
           

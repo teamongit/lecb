@@ -40,17 +40,23 @@
   .w-150px {
     width:150px;
   }
+  .w-60px {
+    width:60px;
+  }
   .w-30px {
     width:30px;
   }
   .w-33 {
     width: 33.3333%;
   }
-  .text-07 {
+  .fs-07 {
     font-size: 0.7rem;
   }
   .hidden {
     display:none;
+  }
+  .offcanvas-header .btn-close {
+    filter: invert(1);
   }
   @keyframes spin {
     to {
@@ -61,11 +67,6 @@
     animation: spin 1s linear infinite;
     transform-origin: center;
   }
-
-  .nav.nav-tabs .nav-link.active {
-    background-color: #3a67b1;
-    color: white
-}
 .btn-group .btn.active {
   background-color: var(--bs-primary); 
   color: white;
@@ -87,44 +88,4 @@
   display: flex;
   align-items: center;
   justify-content: center;
-}
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.candidato-enter {
-  animation: fadeInUp 0.5s ease-out forwards;
-}
-.pub-item-enter {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.pub-item-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: all 500ms ease-out;
-}
-
-/* Animación para la eliminación de publicaciones */
-@keyframes desaparecerDerecha {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-}
-
-.pub-salida {
-  animation: desaparecerDerecha 500ms ease-in forwards;
 }
