@@ -1,8 +1,13 @@
-dist
-functions
-localdata
-excel
-info
-node_modules
-functions
-firebaseConfig.js
+# Carpetas
+.vscode/
+dist/
+adminSDK/
+credentials/
+emulator/
+functions/
+info/
+node_modules/
+turneros/
+
+# Archivos sensibles
+
