@@ -1,13 +1,15 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { usePublicaciones } from "../hooks/usePublicaciones";
 
-const PublicacionesContext = createContext();
+const PublicacionesContext = createContext(null);
 
 export const PublicacionesProvider = ({ children }) => {
   const publicacionesHook = usePublicaciones();
 
+  const value = useMemo(() => publicacionesHook, [publicacionesHook]);
+
   return (
-    <PublicacionesContext.Provider value={publicacionesHook}>
+    <PublicacionesContext.Provider value={value}>
       {children}
     </PublicacionesContext.Provider>
   );

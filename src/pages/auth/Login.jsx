@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import TeamOnLogo from "../../components/TeamOnLogo";
+import { TeamOnLogo } from "../../components/Logo";
 import { Button, Card, Form, InputGroup, Row, Col, Container, Alert } from "react-bootstrap";
 import { PersonCircle, Eye, EyeSlash } from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { db, auth } from "../../firebaseConfig";
-import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { getDoc, doc, setDoc, updateDoc, serverTimestamp, deleteField } from "firebase/firestore";
-
+import { ROUTES } from "../../utils/constants";
 
 function PasswordInput({ label, name, value, setValue }) {
   const [show, setShow] = useState(false);
@@ -84,6 +84,14 @@ function FormRegister({ setViewLogin, setMensaje }) {
       return;
     }
 
+    if (!nombres.includes(valores.nombre)) {
+      setMensaje({
+        texto: "El nombre seleccionado no es válido",
+        clase: "danger",
+      });
+      return;
+    }
+
     try {  
       setMensaje({
         texto: "Registrando usuario...",
@@ -92,12 +100,23 @@ function FormRegister({ setViewLogin, setMensaje }) {
       // TODO: 
       // Validar que el nombre no esté ya registrado
       // Validar que el email no esté ya registrado
+      // Validar si el nombre ya fue registrado en USUARIOS
+      const usuarioDocRef = doc(db, "USUARIOS", valores.nombre);
+      const usuarioDocSnap = await getDoc(usuarioDocRef);
+      if (usuarioDocSnap.exists()) {
+        setMensaje({
+          texto: "El nombre seleccionado ya está registrado",
+          clase: "danger",
+        });
+        return;
+      }
 
       // 1. Registrar usuario en Firebase Authentication    
-      const userCredential = await createUserWithEmailAndPassword(auth, valores.email, password1);
-      const user = userCredential.user;
+      const credencial = await createUserWithEmailAndPassword(auth, valores.email, password1);
+      const registrado = credencial.user;
+
       try {
-        await sendEmailVerification(user);
+        await sendEmailVerification(registrado);
       } catch (error) {
         console.error("Error al enviar email de verificación:", error);
         setMensaje({
@@ -107,46 +126,60 @@ function FormRegister({ setViewLogin, setMensaje }) {
       }
       
       // 2. Doc lista usuarios sin registrar
-      const docRef = doc(db, "USUARIOS", "#LECB");
-      const docSnap = await getDoc(docRef);
-      
-      let usuario = {};
-      
-      if (docSnap.exists()) {        
-        // Campo nombre (datos del usuario sin registrar)
-        if (docSnap.data()[valores.nombre]) {
-          usuario = {
-            uid: user.uid,
-            creado: serverTimestamp(),
-            ...valores,
-            ...docSnap.data()[valores.nombre],    
-          }
-        }          
-        // 4. Crear un doc en USUARIOS con los datos
-        await setDoc(doc(db, "USUARIOS", valores.nombre), usuario);        
-        // 5. Eliminar el campo nombre de la lista temporal
-        await updateDoc(docRef, { [valores.nombre]: deleteField() });        
-        // 6. Login
+      const listaDocRef = doc(db, "USUARIOS", "#LECB");
+      const listaDocSnap = await getDoc(listaDocRef);
+      if (!listaDocSnap.exists()) {
         setMensaje({
-          texto: "Usuario registrado con éxito",
-          clase: "success"
+          texto: "Error: lista temporal de usuarios no encontrada",
+          clase: "danger",
         });
-        setTimeout(() => {
-          setMensaje({
-            texto: "Redirigiendo a login...",
-            clase: "success"
-          }); 
-          setTimeout(() => {
-            setViewLogin(true);
-            setMensaje({
-              texto: "",
-              clase: ""
-            }); 
-          }, 2000);
-        }, 2000);
-      }    
+        return;
+      }
+      // 3. Datos extra guardados en lista temporal para ese nombre
+      const datosTemporales = listaDocSnap.data()[valores.nombre];
+        if (!datosTemporales) {
+        setMensaje({
+          texto: "Error: datos temporales no encontrados para el nombre seleccionado",
+          clase: "danger",
+        });
+        return;
+      }
+
+      // 4. Armar objeto usuario definitivo
+      const usuario = {
+        creado: serverTimestamp(),
+        ...valores,
+        ...datosTemporales,
+      };
+      // 5. Guardar en Firestore en documento con uid
+      await setDoc(doc(db, "USUARIOS", registrado.uid), usuario);
+      // 6. Eliminar el nombre de la lista temporal
+      await updateDoc(listaDocRef, {
+        [valores.nombre]: deleteField(),
+      });
+          
+      // 6. Login
+      setMensaje({
+        texto: "Usuario registrado con éxito. Revisa tu correo para verificar tu cuenta.",
+        clase: "success",
+      });
+      setViewLogin(true);
+          
     } catch (error) {
       console.error("Error al registrar usuario:", error);
+
+      let textoError = "Error al registrar usuario";
+      if (error.code === "auth/email-already-in-use") {
+        textoError = "El email ya está en uso";
+      } else if (error.code === "auth/invalid-email") {
+        textoError = "El email no es válido";
+      } else if (error.code === "auth/weak-password") {
+        textoError = "La contraseña es demasiado débil";
+      }
+      setMensaje({
+        texto: textoError,
+        clase: "danger",
+      });
     }
   };
 
@@ -206,15 +239,9 @@ function FormRegister({ setViewLogin, setMensaje }) {
   );
 }
 function FormLogin({ setViewLogin, setMensaje }) {
-  const { user, userData, loading, login } = useAuth();
+  const { login } = useAuth();
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
 
-  // Redirigir al usuario si ya está autenticado y tiene datos
-  useEffect(() => {
-    if (!loading && user && userData) 
-      navigate("/user/publicambios", { replace: true });
-  }, [loading, user, userData, navigate]);
 
   const Entrar = async (e) => {
     e.preventDefault();
@@ -267,34 +294,34 @@ function FormLogin({ setViewLogin, setMensaje }) {
   );  
 }
 
-export default function LoginPage() {
+export default function Login() {
   const [viewLogin, setViewLogin] = useState(true);
   const [mensaje, setMensaje] = useState({
     texto: "",
     clase: ""
   });
   
-  const { user, userData, loading, logout } = useAuth(); 
-  const navigate = useNavigate();       
+  // const { autenticado, esAutenticado, usuario, loading, login, logout } = useAuth(); 
+  // const navigate = useNavigate();       
   
-  useEffect(() => {
-    // Cargando...
-    if (loading) return;
-    // No hay usuario
-    if (!user) return;
-    // No ha verficado email
-    if (!user.emailVerified) {
-      setMensaje({
-        texto: "Verifica tu correo",
-        clase: "info"
-      });
-      logout();
-      return;
-    }
-    // Esperar a cargar los datos de usuario y redirigir
-    if (userData) navigate("/user/publicambios");
+  // useEffect(() => {
+  //   // Cargando...
+  //   if (loading) return;
+  //   // No hay usuario
+  //   if (!user) return;
+  //   // No ha verficado email
+  //   if (!user.emailVerified) {
+  //     setMensaje({
+  //       texto: "Verifica tu correo",
+  //       clase: "info"
+  //     });
+  //     logout();
+  //     return;
+  //   }
+  //   // Esperar a cargar los datos de usuario y redirigir
+  //   // if (userData) navigate("/user/publicambios");
     
-  }, [loading, user, userData, navigate]);
+  // }, [loading, user, userData, navigate]);
 
   return (
     <Card className="m-3 shadow rounded-3">

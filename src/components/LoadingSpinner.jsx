@@ -1,7 +1,7 @@
 // LoadingSpinner.jsx
 import { Spinner } from 'react-bootstrap';
 
-function LoadingSpinner() {
+export default function LoadingSpinner() {
   return (
     <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
       <Spinner animation="border" role="status">
@@ -10,5 +10,3 @@ function LoadingSpinner() {
     </div>
   );
 }
-
-export default LoadingSpinner;

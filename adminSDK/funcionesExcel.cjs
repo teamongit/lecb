@@ -12,9 +12,16 @@ const db = admin.firestore();
 const obtenerUsuariosRegistrados = async () => {  
   const colRef = db.collection('USUARIOS');
   const snapshot = await colRef.get();
-  const usuariosRegistrados = snapshot.docs.map(doc => doc.id);
+  const usuariosRegistrados = snapshot.docs
+    .filter(doc => doc.data().nombre !== undefined)
+    .map(doc => ({
+      id: doc.id,
+      nombre: doc.data().nombre,
+      data: doc.data(),
+    }));
   return usuariosRegistrados;
-}
+};
+
 
 const procesarTurneroExcel = async (turnero, dependencia, ano, mes, nucleo) => {
   // 3. Obtener las hojas del archivo Excel
@@ -22,6 +29,9 @@ const procesarTurneroExcel = async (turnero, dependencia, ano, mes, nucleo) => {
   const hojas = turnero.SheetNames.slice(0, ultimaPagina);
   // 4. Obtener usuarios registrados
   const usuariosRegistrados = await obtenerUsuariosRegistrados();
+  const usuariosRegistradosPorNombre = Object.fromEntries(
+    usuariosRegistrados.map(u => [u.nombre, u])
+  );
   const usuariosTurnero = {};
   const turnosTurnero = {};
   const jornadasTurnero = {};
@@ -131,15 +141,60 @@ const procesarTurneroExcel = async (turnero, dependencia, ano, mes, nucleo) => {
     Object.entries(usuariosTurnero).filter(([nombre]) => !usuariosRegistrados.includes(nombre))
   );
   await actualizarUsuariosNoRegistrados(usuariosNoRegistrados, dependencia);
+  await actualizarCamposUsuariosExistentes(usuariosTurnero, usuariosRegistradosPorNombre);
+  await marcarUsuariosAusentes(usuariosRegistradosPorNombre, usuariosTurnero);
   await subirTurnos(turnosTurnero);
   await subirTurnero(turnosTurnero, dependencia, ano, mes, nucleo);
 };
+
+const actualizarCamposUsuariosExistentes = async (usuariosTurnero, usuariosRegistradosPorNombre) => {
+  const colRef = db.collection('USUARIOS');
+  const batch = db.batch();
+
+  for (const [nombre, nuevoUsuario] of Object.entries(usuariosTurnero)) {
+    const usuarioRegistrado = usuariosRegistradosPorNombre[nombre];
+    if (!usuarioRegistrado) continue;
+
+    const docRef = colRef.doc(usuarioRegistrado.id);
+    const datosActuales = usuarioRegistrado.data;
+    const camposActualizables = ['nombre', 'nucleo', 'equipo', 'categoria'];
+    const cambios = {};
+
+    camposActualizables.forEach(campo => {
+      if (datosActuales[campo] !== nuevoUsuario[campo]) {
+        cambios[campo] = nuevoUsuario[campo];
+      }
+    });
+
+    if (Object.keys(cambios).length > 0) {
+      batch.update(docRef, cambios);
+    }
+  }
+
+  await batch.commit();
+  console.log("Usuarios existentes actualizados (si había diferencias)");
+};
+
 
 // Actualizar el doc lista de usuarios no registrados de la dependencia
 const actualizarUsuariosNoRegistrados = async (usuariosNoRegistrados, dependencia) => {
   const docRef = db.collection('USUARIOS').doc('#'+dependencia);
   await docRef.set(usuariosNoRegistrados, { merge: true });
   console.log("Usuarios temporales subidos a Firestore en el doc #LECB");
+};
+const marcarUsuariosAusentes = async (usuariosRegistradosPorNombre, usuariosTurnero) => {
+  const colRef = db.collection('USUARIOS');
+  const batch = db.batch();
+
+  Object.entries(usuariosRegistradosPorNombre).forEach(([nombre, usuario]) => {
+    if (!(nombre in usuariosTurnero)) {
+      const docRef = colRef.doc(usuario.id);
+      batch.update(docRef, { estado: "ausente" });
+    }
+  });
+
+  await batch.commit();
+  console.log("Usuarios marcados como ausentes si no estaban en el turnero");
 };
 
 const subirTurnos = async (turnosTurnero) => {
@@ -161,19 +216,10 @@ const subirTurnero = async (turnosTurnero, dependencia, ano, mes, nucleo) => {
   await docRef.set(turnosTurnero);
   console.log("TURNERO subido a Firestore");    
 };
-const subirJornadas = async (jornadas) => {
-  const colRef = db.collection('JORNADAS'); // Cambiar a la colección de jornadas
-  const batch = db.batch(); // Crear un batch para subir las jornadas
-  jornadas.forEach((jornada) => {     
-    const docRef = colRef.doc(jornada.id); // Usar el ID de la jornada como nombre del documento
-    batch.set(docRef, jornada, { merge: true }); // Subir la jornada con merge para evitar sobrescribir datos existentes
-  });
-  await batch.commit(); // Ejecutar el batch
-  console.log("JORNADAS subidas a Firestore");  
-}
+
 const main = async () => {
   // 1. Obtener variables de identificación del turnero
-  const rutaTurnero = "../turneros/09_lecb-tma-septiembre-2025.xlsx"; // Cambiar
+  const rutaTurnero = "../turneros/09_lecb-ruta-septiembre-2025.xlsx"; // Cambiar
   const dependenciaTurnero = rutaTurnero.split("/")[2].split("-")[0].split("_")[1].toUpperCase();
   const nucleoTurnero = rutaTurnero.includes("ruta") ? "RUTA" : "TMA";
   const mesTurnero = rutaTurnero.split("/")[2].split("_")[0].padStart(2, "0");

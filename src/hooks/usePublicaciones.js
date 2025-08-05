@@ -17,19 +17,16 @@ import { useAuth } from "../hooks/useAuth";
 import { anadirCandidatos, esDuplicado, esMatch } from "../utils/publicaciones";
 
 export const usePublicaciones = () => {
-  const { userData } = useAuth();
+  const { usuario } = useAuth();
   const [publicaciones, setPublicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   // CRUD básico de publicaciones
-  
   // Read Publicaciones filtradas (query): Listener tiempo real
   useEffect(() => {
-    // if (!userData) return;
-
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
     // TODO: En el futuro cambiar si solo somos compatibles dentro del mismo nucleo
-    const nucleos = userData.nucleo.includes("RUTA")
+    const nucleos = usuario.nucleo.includes("RUTA")
       ? ["RUTAE", "RUTAW"]
       : ["TMA"];
 
@@ -59,9 +56,7 @@ export const usePublicaciones = () => {
       }
       // Agregar publicacion
       // Filtrar publicaciones existentes compatibles
-      const pubsMatch = publicaciones.filter(pub => { 
-        return esMatch(pub, nuevaPub);
-      });
+      const pubsMatch = publicaciones.filter(pub => esMatch(pub, nuevaPub));
 
       // 1. Añadir candidatos a nuevaPub
       if (pubsMatch.length) {
@@ -69,22 +64,26 @@ export const usePublicaciones = () => {
       }
       const colRef = collection(db, "PUBLICACIONES");
       const docRef = await addDoc(colRef, nuevaPub);
-
+      const { nombre, apodo, equipo, nucleo, ofrece } = nuevaPub;
       // 2. Añadir usuario que publica como candidato a las publicaciones que ya existen: en firestore y en local
-      for (const pubMatch of pubsMatch) {
-        const docMatchRef = doc(db, "PUBLICACIONES", pubMatch.id);
-        await updateDoc(docMatchRef, {
-          candidatos: arrayUnion({            
-            nombre:   nuevaPub.nombre,
-            apodo:    nuevaPub.apodo,
-            equipo:   nuevaPub.equipo,
-            nucleo:   nuevaPub.nucleo,
-            turno:    nuevaPub.ofrece.turno,
-            pubId:    docRef.id,
-            asignado: false,
-          }),
-        });
-      }
+      // Evitar racing si hay muchas publicaciones simultaneas
+      await Promise.all(
+        pubsMatch.map(pubMatch => {
+          const docMatchRef = doc(db, "PUBLICACIONES", pubMatch.id);
+          return updateDoc(docMatchRef, {
+            candidatos: arrayUnion({
+              nombre,
+              apodo,
+              equipo,
+              nucleo,
+              turno: ofrece.turno,
+              pubId: docRef.id,
+              asignado: false,
+            }),
+          });
+        })
+      );
+      
       // TODO: Para que devolvemos esto?
       return { id: docRef.id, ...nuevaPub };
 

@@ -1,0 +1,59 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "PUBLICACIONES",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "jornada",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "lista",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "nucleo",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "fecha",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "PUBLICACIONES",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "lista",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "nucleo",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "fecha",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "PUBLICACIONES",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "nucleo",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "fecha",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

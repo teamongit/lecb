@@ -2,7 +2,7 @@
 import NavBar from "../pages/NavBar";
 import { Outlet } from "react-router-dom";
 
-function PrivateLayout() {
+export default function Privado() {
   return (
     <>
       <NavBar />
@@ -10,5 +10,3 @@ function PrivateLayout() {
     </>
   );
 }
-
-export default PrivateLayout;

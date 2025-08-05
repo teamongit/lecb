@@ -1,4 +1,4 @@
-export default function TeamOnLogo({ color = "#fff", className = "", ...props }) {
+export function TeamOnLogo({ color = "#fff", className = "", ...props }) {
   return (
     <svg
       id="loader"

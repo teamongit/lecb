@@ -3,7 +3,8 @@ import { Navbar, Offcanvas, Nav, Container } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Power, CalendarWeek } from 'react-bootstrap-icons';
 import { useAuth } from "../hooks/useAuth"; 
-import TeamOnLogo from '../components/TeamOnLogo';
+import { TeamOnLogo } from '../components/Logo';
+import { ROUTES } from "../utils/constants";
 
 const NavBarItem = ({ icon, label, to, onClose }) => {
   const location = useLocation();
@@ -58,9 +59,7 @@ const NavBarSubMenu = ({ icon, label, items, onClose }) => {
 const NavBar = () => {
   const navigate = useNavigate();
   const [show, setShow] = useState(false);
-  const { userData, logout, loading } = useAuth();
-  
-  if (loading) return null;
+  const { usuario, logout, loading } = useAuth();
 
   const handleLogout = async () => {
     await logout();  
@@ -86,7 +85,8 @@ const NavBar = () => {
     { label: "Sectores", icon: "bi-2-circle", link: "/super/sectores" }
   ];
 
-  const userLabel = `${userData.apodo} ${userData.nucleo} ${userData.equipo}`;
+  const userLabel = `${usuario?.apodo || ''} ${usuario?.nucleo || ''} ${usuario?.equipo || ''}`.trim();
+
   return (
     <>
       <Navbar className="text-dark p-2 mb-3 shadow px-3" bg="dark" data-bs-theme="dark">
@@ -115,22 +115,22 @@ const NavBar = () => {
           
         <Offcanvas.Body>
           <Nav className="flex-column">
-            <NavBarItem icon="bi-person-circle" label={userData?.apodo || "Perfil"} to="/dashboard" onClose={handleClose} />
-            <NavBarItem icon="bi-calendar-week" label="Publicambios" to="/user/publicambios" onClose={handleClose} />
+            <NavBarItem icon="bi-person-circle" label={usuario?.apodo || "Perfil"} to={ROUTES.USUARIO_PERFIL} onClose={handleClose} />
+            <NavBarItem icon="bi-calendar-week" label="Publicambios" to={ROUTES.USUARIO_PUBLICAMBIOS} onClose={handleClose} />
             {/* 
             <NavBarItem icon="bi-2-circle" label="Tuturnero" to="/user/tuturnero" onClose={handleClose} />
             <NavBarItem icon="bi-3-circle" label="Nocturnos" to="/user/nocturnos" onClose={handleClose} />
             <NavBarItem icon="bi-4-circle" label="Pidevacas" to="/user/pidevacas" onClose={handleClose} /> 
 
-            {userData?.rol?.includes("admin") && (
+            {usuario?.rol?.includes("admin") && (
               <NavBarSubMenu icon="bi-mortarboard-fill" label="Admin" items={adminItems} onClose={handleClose} />
             )}
 
-            {userData?.rol?.includes("furri") && (
+            {usuario?.rol?.includes("furri") && (
               <NavBarSubMenu icon="bi-android" label="Furri" items={furriItems} onClose={handleClose} />
             )}
 
-            {userData?.rol?.includes("super") && (
+            {usuario?.rol?.includes("super") && (
               <NavBarSubMenu icon="bi-cup-hot-fill" label="Super" items={superItems} onClose={handleClose} />
             )}
             */}

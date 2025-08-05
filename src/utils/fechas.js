@@ -13,12 +13,22 @@ export function formatearFecha(fechaEntrada, formato) {
   }
 
   const opciones = {
-    mesLargo: { month: "long" },
-    mesAno: { month: "long", year: "numeric"},
-    numDia: { day: "numeric" },
-    diaYNombreCorto: { day: "numeric", weekday: "short" },
-    completo: { day: "numeric", weekday: "short", month: "short" },
-    iso: null // se trata por separado
+    1: { day: "numeric" },
+    2: { month: "numeric" },
+    3: { year: "numeric" },
+    4: { month: "long" },
+    5: { day: "long" },
+    6: { month: "long", year: "numeric" },
+    7: { day: "numeric", weekday: "short" },
+    8: { day: "numeric", weekday: "long", month: "short", year: "numeric" },
+    iso: null // fallback
+    
+    
+    // mesLargo: { month: "long" }, //mesLargo
+    // mesAno: { month: "long", year: "numeric"}, //mesAno
+    // numDia: { day: "numeric" }, //numDia
+    // diaYNombreCorto: { day: "numeric", weekday: "short" }, //diaYNombreCorto
+    // completo: { day: "numeric", weekday: "long", month: "short", year: "numeric" }, //completo
   };
 
   if (formato === "iso") {

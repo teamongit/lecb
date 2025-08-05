@@ -42,7 +42,7 @@ export function PubItem({
         role="button"
         onClick={onToggleExpand}
       >
-        <div>{formatearFecha(pub.fecha, "completo")}</div>
+        <div>{formatearFecha(pub.fecha, 7)}</div>
         <div>{pub.ofrece.turno} x {pub.solicita.turno} ({pub.modalidad})</div>
         <div className="d-flex align-items-center">
           {pub.nucleo}

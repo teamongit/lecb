@@ -1,47 +1,55 @@
-import { createContext, useContext, useEffect, useState } from "react";
+//context/AuthProvider.jsx
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { auth, db } from "../firebaseConfig";
 import { 
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
   signOut, 
 } from "firebase/auth";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [autenticado, setAutenticado] = useState(null);       // auth
+  const [usuario, setUsuario] = useState(null);  // doc
+  const [loading, setLoading] = useState(true); // lock
 
   useEffect(() => {
-    
-    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
-    
-      if (!authUser) {       
-        setUser(null);
-        setUserData(null);
+    const unsubscribe = onAuthStateChanged(auth, async (usuarioAutenticado) => {
+      
+      if (!usuarioAutenticado) {            
+        setAutenticado(null);
+        setUsuario(null);
         setLoading(false);
         return;
       }
       
       try {
-        // 1. Recuperar el doc de USUARIOS con uid
-        const q = query(collection(db, "USUARIOS"), where("uid", "==", authUser.uid));
-        const querySnapshot = await getDocs(q);
-        // 2. Leer los datos del doc del usuario
-        const loadedUserData = querySnapshot.empty 
-          ? null 
-          : querySnapshot.docs[0].data();         
+        // 1. Obtener el doc de usuario
+        const docRef = doc(db, "USUARIOS", usuarioAutenticado.uid);
+        const docSnap = await getDoc(docRef);
+        const datosUsuario = docSnap.exists() ? docSnap.data() : null;
+        // 2. Usuario autenticado sin doc de usuario
+        if (!docSnap.exists()) {
+          console.warn("El usuario no tiene documento en Firestore. Cerrando sesión...");
+          await signOut(auth);
+          setAutenticado(null);
+          setUsuario(null);
+          return;
+        }
         // 3. Set datos en el contexto
-        setUserData(loadedUserData);
-        setUser(authUser);
-        setLoading(false);
-
+        setAutenticado(usuarioAutenticado);
+        setUsuario(datosUsuario);
+ 
       } catch (error) {
         console.error("Error al obtener los datos de usuario:", error); 
-        setUserData(null);
-        setUser(null);
+        setUsuario(null);
+        setAutenticado(null);
+        
+      } finally {
+        setLoading(false);
       }
     });
     return () => unsubscribe();
@@ -49,8 +57,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => signInWithEmailAndPassword(auth, email, password);
   const logout = () => signOut(auth);
-  const value = { user, userData, loading, login, logout };
-
+  const value = useMemo(
+    () => ({ autenticado, usuario, loading, login, logout }), 
+    [autenticado, usuario, loading]
+  );
+  
+  if (loading) return <LoadingSpinner />; 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
