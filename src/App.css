@@ -15,7 +15,6 @@
   .mi-color{
     color: #3a67b1;    
   }
-
   .icono-sombra {
     filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.3));
   }
@@ -51,6 +50,12 @@
   }
   .fs-07 {
     font-size: 0.7rem;
+  }
+  .fs-08 {
+    font-size: 0.8rem;
+  }
+  .fs-09 {
+    font-size: 0.9rem;
   }
   .hidden {
     display:none;

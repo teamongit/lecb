@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Navbar, Offcanvas, Nav, Container } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Power, CalendarWeek } from 'react-bootstrap-icons';
+import { Power, List, CalendarWeek } from 'react-bootstrap-icons';
 import { useAuth } from "../hooks/useAuth"; 
 import { TeamOnLogo } from '../components/Logo';
 import { ROUTES } from "../utils/constants";
@@ -92,7 +92,8 @@ const NavBar = () => {
       <Navbar className="text-dark p-2 mb-3 shadow px-3" bg="dark" data-bs-theme="dark">
         <Container fluid className="d-flex align-items-center">
           <Navbar.Brand onClick={handleShow} className="d-flex gap-3 align-items-center" role="button">
-            <TeamOnLogo className="fs-3"/>
+            {/* <TeamOnLogo className="fs-3"/> */}
+            <List style={{fontSize:"2.8rem"}} />
             <div className="d-flex flex-column">
               <span className="text-white">teamOn!</span>
               <span className="text-white-50 fs-07">{userLabel}</span>

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Tabs, Tab } from "react-bootstrap";
-import { TituloH1 } from "../../../components/Titulos";
-import { PublicacionesPropias } from "./PublicacionesPropias";
+import { Titulo } from "../../../components/Titulos";
+import { PublicacionesPropias } from "./Propias";
 import { Publicar } from "./Publicar";
 import { PublicacionesProvider } from "../../../context/PublicacionesContext";
-import { PublicacionesTodas } from "./PublicacionesTodas";
+import { PublicacionesTodas } from "./Todas";
 
 export default function Publicambios() {
   const [tab, setTab] = useState("publicar");
@@ -12,7 +12,7 @@ export default function Publicambios() {
   return (
     <PublicacionesProvider>
 
-      <TituloH1 texto="PubliCambios" tag="h1" color="text-dark" margen="my-3"/>
+      <Titulo titulo="PubliCambios" Tag="h1" />
       <Tabs activeKey={tab} onSelect={setTab} className="mb-3" fill>
         <Tab eventKey="publicar" title="Publicar" className="border border-1 rounded p-1">
           <Publicar />

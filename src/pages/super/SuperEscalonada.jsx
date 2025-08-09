@@ -1,7 +1,7 @@
-import { TituloH1 } from "../../components/Titulos";
+import { Titulo } from "../../components/Titulos";
 
 export default function SuperEscalonada() {
   return (
-    <TituloH1 texto="Supere: Escalonada"/>
+    <Titulo titulo="Supere: Escalonada"/>
   );
 }

@@ -5,26 +5,48 @@ import { usePublicaciones } from "../../../hooks/usePublicaciones";
 import { formatearFecha } from "../../../utils/fechas";
 import { Button, Modal } from "react-bootstrap";
 
+
+const BotonesModal = ({ modalPub, usuario, apuntando, setModalPub, handleApuntarme, handleBorrarme }) => {
+  const esPropia = modalPub.nombre === usuario.nombre;
+  const yaApuntado = modalPub.candidatos?.some(c => c.nombre === usuario.nombre);
+
+  return (
+    <>
+      <Button variant="secondary" onClick={() => setModalPub(null)}>
+        Cerrar
+      </Button>
+
+      {!esPropia && (
+        yaApuntado ? (
+          <Button variant="danger" onClick={handleBorrarme}>
+            Borrarme
+          </Button>
+        ) : (
+          <Button variant="primary" onClick={handleApuntarme} disabled={apuntando}>
+            {apuntando ? "Apuntando..." : "Apuntarme"}
+          </Button>
+        )
+      )}
+    </>
+  );
+};
+
 export function PublicacionesTodas() {
-  const { publicaciones, loading, editarPublicacion } = usePublicaciones();
+  const { publicaciones, editarPublicacion } = usePublicaciones();
   const { usuario } = useAuth();
 
   const [modalPub, setModalPub] = useState(null); 
   const [apuntando, setApuntando] = useState(false);
 
   // Filtrar o agrupar publicaciones
-  const publicacionesPorMes = useMemo(() => {    
-
+  const publicacionesPorMes = useMemo(() => {
     const agrupadas = {};
-    // Aquí es importante definir esPropia si se usa, sino mostrar todas sin filtro
     publicaciones.forEach((pub) => {
       if (!pub.fecha?.toDate) return;
-      const mes = formatearFecha(pub.fecha, 6);
-
+      const mes = formatearFecha(pub.fecha, {month: "long"});
       if (!agrupadas[mes]) agrupadas[mes] = [];
       agrupadas[mes].push(pub);
     });
-
     return agrupadas;
   }, [publicaciones]);
 
@@ -39,7 +61,7 @@ export function PublicacionesTodas() {
       const { nombre, apodo, nucleo, equipo } = usuario;
       
       candidatos.push({ nombre, apodo, nucleo, equipo });
-      // Actualizar la publicación con el nuevo candidato y estado publicado
+      // Actualizar la publicación con el nuevo candidato
       await editarPublicacion(modalPub.id, { candidatos });
 
       // Actualizar el modal con los nuevos datos
@@ -58,14 +80,10 @@ export function PublicacionesTodas() {
     setApuntando(true);
 
     try {
-      const nuevosCandidatos = modalPub.candidatos.filter(
-        (c) => c.nombre !== usuario.nombre
-      );
-
+      const nuevosCandidatos = modalPub.candidatos.filter(c => c.nombre !== usuario.nombre);
       await editarPublicacion(modalPub.id, { candidatos: nuevosCandidatos });
-
       // Actualizar el modal con los nuevos datos
-      setModalPub((prev) => ({
+      setModalPub(prev => ({
         ...prev,
         candidatos: nuevosCandidatos,
       }));
@@ -80,34 +98,37 @@ export function PublicacionesTodas() {
 
   return (
     <>
-      {Object.entries(publicacionesPorMes).length > 0 ? (
-        Object.entries(publicacionesPorMes).map(([mes, pubs]) => (
+      <div className="m-3">Añadir filtros aquí</div>
+      {Object.entries(publicacionesPorMes).length 
+      ? (Object.entries(publicacionesPorMes).map(([mes, pubs]) => (
           <div key={mes}>
             <h4 className="bg-secondary text-white mx-0 p-2 rounded">{mes}</h4>
             {pubs.map((pub) => {
-              const esAsignado = pub.candidatos?.some((c) => c.asignado) ?? false;
-              const tieneCandidatos = pub.candidatos?.length > 0;
-              const claseFondo = esAsignado ? "success" : tieneCandidatos ? "warning" : "light";
+              const hayAsignado = pub.candidatos.some(c => c.asignado);
+              const hayCandidatos = pub.candidatos.length;
+              const esPropia = usuario.nombre === pub.nombre;
+              const variant = hayAsignado 
+                ? "success" 
+                : hayCandidatos 
+                  ? "warning" 
+                  : "light";
 
               return (
                 <PubItem
                   key={pub.id}
                   pub={pub}
-                  variant={claseFondo}
-                  // Al hacer click abrimos modal con detalles
+                  esPropia={esPropia}
+                  variant={variant}
                   onClick={() => setModalPub(pub)}
-                  esPropia={usuario.nombre === pub.usuario}
                   onToggleExpand={() => setModalPub(pub)}
                 />
               );
             })}
           </div>
-        ))
-      ) : (
-        <span>No hay publicaciones</span>
-      )}
+        ))) 
+      : (<span>No hay publicaciones</span>)}
 
-      {/* Modal con detalles de publicación */}
+      
       {modalPub && (
         <Modal
           show={true}
@@ -121,7 +142,7 @@ export function PublicacionesTodas() {
             </Modal.Title>
           </Modal.Header>
           <Modal.Body id="modal-detalle-desc">
-            <p>{formatearFecha(modalPub.fecha, 8)} : {modalPub.ofrece.turno} x {modalPub.solicita.turno} ({modalPub.modalidad})</p>
+            <p>{formatearFecha(modalPub.fecha, {month: "long"})} : {modalPub.ofrece.turno} x {modalPub.solicita.turno} ({modalPub.modalidad})</p>
 
             {modalPub.comentarios && (<p><strong>Comentarios:</strong> {modalPub.comentarios}</p>)}
             <p><strong>Candidatos:</strong></p>
@@ -138,17 +159,14 @@ export function PublicacionesTodas() {
             </ul>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setModalPub(null)}>
-              Cerrar
-            </Button>
-            {modalPub.candidatos?.some(c => c.nombre === usuario.nombre) 
-              ? (<Button variant="danger" onClick={handleBorrarme}>Borrarme</Button>) 
-              : (
-                <Button variant="primary" onClick={handleApuntarme} disabled={apuntando}>
-                  {apuntando ? "Apuntando..." : "Apuntarme"}
-                </Button>
-              ) 
-            }
+           <BotonesModal 
+            modalPub = {modalPub} 
+            usuario = {usuario} 
+            apuntando = {apuntando} 
+            setModalPub = {setModalPub} 
+            handleApuntarme = {handleApuntarme} 
+            handleBorrarme = {handleBorrarme}  
+            />
           </Modal.Footer>
         </Modal>
       )}

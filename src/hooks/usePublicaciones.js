@@ -12,7 +12,7 @@ import {
   Timestamp,
   arrayUnion,
 } from "firebase/firestore";
-import { db } from "../firebaseConfig";
+import { db } from "../firebase/firebaseConfig";
 import { useAuth } from "../hooks/useAuth";
 import { anadirCandidatos, esDuplicado, esMatch } from "../utils/publicaciones";
 

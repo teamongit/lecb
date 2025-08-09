@@ -1,7 +1,7 @@
-import { TituloH1 } from "../../components/Titulos";
+import { Titulo } from "../../components/Titulos";
 
 export default function SuperSectores() {
   return (
-    <TituloH1 texto="Super: Sectores"/>
+    <Titulo titulo="Super: Sectores"/>
   )
 }

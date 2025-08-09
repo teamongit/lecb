@@ -1,77 +1,12 @@
-import { TituloH1 } from "../../../components/Titulos";
-import {
-  Container,
-  Card,
-  Row,
-  Col,
-  Image,
-  Tab,
-  Tabs,
-  Alert,
-} from 'react-bootstrap';
+import { Titulo } from "../../../components/Titulos";
+import { Container, Card, Row, Col, Image, Tab, Tabs } from 'react-bootstrap';
 import { useAuth } from "../../../hooks/useAuth";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../../firebaseConfig";
-import { useEffect, useState } from 'react';
-import { formatearFecha } from "../../../utils/fechas";
 import { CATEGORIAS } from "../../../utils/constants";
 import { SiguientesTurnos } from "./SiguientesTurnos";
 
-
-const n = Math.floor(Math.random() * 70) + 1;
-// const SiguientesTurnos = ({ nombre }) => {
-//   const [fechas, setFechas] = useState([]);
-
-//   useEffect(() => {
-//     const cargarTurnos = async () => {
-//       try {
-//         const docRef = doc(db, 'TURNOS', nombre);
-//         const docSnap = await getDoc(docRef);
-
-//         if (docSnap.exists()) {
-//           const data = docSnap.data();
-//           const hoy = new Date();
-//           const resultados = [];
-
-//           for (let i = 0; i <= 7; i++) {
-//             const fecha = new Date(hoy);
-//             fecha.setDate(hoy.getDate() + i);
-
-//             const yyyy = fecha.getFullYear();
-//             const mm = String(fecha.getMonth() + 1).padStart(2, '0');
-//             const dd = String(fecha.getDate()).padStart(2, '0');
-//             const clave = `${yyyy}-${mm}-${dd}`;
-
-//             const valor = data[clave] ?? 'L';
-//             resultados.push([clave, valor]);
-//           }
-
-//           setFechas(resultados);
-//         }
-//       } catch (error) {
-//         console.error('Error al recuperar turnos:', error);
-//       }
-//     };
-
-//     cargarTurnos();
-//   }, [nombre]);
-
-//   return (
-//     <div className="d-flex justify-content-between flex-grow flex-wrap gap-1">
-//       {fechas.map(([fecha, valor], idx) => (
-//         <Alert key={idx} variant="light" className="m-1 p-1 w-60px fs-07">
-//           <div><strong>{formatearFecha(fecha,"numDia")}</strong></div>
-//           <div>{valor}</div>
-//         </Alert>
-//       ))}
-//     </div>
-//   );
-// };
-
-
-
 const ContenidoPerfil = () => {
   const { usuario } = useAuth();
+  const n = Math.floor(Math.random() * 70) + 1;
 
   return (
     <Container className="pb-4">
@@ -143,7 +78,7 @@ const ContenidoPerfil = () => {
 export default function Perfil() {
   return (
   <>
-    <TituloH1 texto="Perfil"/>
+    <Titulo titulo="Perfil" />
     <ContenidoPerfil />
   </>
   );

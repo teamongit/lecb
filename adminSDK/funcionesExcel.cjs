@@ -161,12 +161,13 @@ const actualizarCamposUsuariosExistentes = async (usuariosTurnero, usuariosRegis
     const cambios = {};
 
     camposActualizables.forEach(campo => {
-      if (datosActuales[campo] !== nuevoUsuario[campo]) {
-        cambios[campo] = nuevoUsuario[campo];
+      const nuevoValor = nuevoUsuario[campo];
+      if (datosActuales[campo] !== nuevoValor && nuevoValor !== undefined) {
+        cambios[campo] = nuevoValor;
       }
     });
 
-    if (Object.keys(cambios).length > 0) {
+    if (Object.keys(cambios).length) {
       batch.update(docRef, cambios);
     }
   }
@@ -199,7 +200,7 @@ const marcarUsuariosAusentes = async (usuariosRegistradosPorNombre, usuariosTurn
 
 const subirTurnos = async (turnosTurnero) => {
   const colRef = db.collection('TURNOS');
-  const batch = db.batch();
+  const batch = db.batch();  
 
   Object.entries(turnosTurnero).forEach(([nombre, turnos]) => {
     const docRef = colRef.doc(nombre);
@@ -219,7 +220,7 @@ const subirTurnero = async (turnosTurnero, dependencia, ano, mes, nucleo) => {
 
 const main = async () => {
   // 1. Obtener variables de identificación del turnero
-  const rutaTurnero = "../turneros/09_lecb-ruta-septiembre-2025.xlsx"; // Cambiar
+  const rutaTurnero = "../turneros/06_lecb-ruta-junio-2025.xlsx"; // Cambiar
   const dependenciaTurnero = rutaTurnero.split("/")[2].split("-")[0].split("_")[1].toUpperCase();
   const nucleoTurnero = rutaTurnero.includes("ruta") ? "RUTA" : "TMA";
   const mesTurnero = rutaTurnero.split("/")[2].split("_")[0].padStart(2, "0");

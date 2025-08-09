@@ -1,80 +1,96 @@
-import React, { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../../firebaseConfig';
+import { useMemo } from 'react';
 import { formatearFecha } from '../../../utils/fechas';
 import Table from 'react-bootstrap/Table';
-import { TituloSmall } from '../../../components/Titulos';
+import { Titulo } from '../../../components/Titulos';
+import { useTurnos } from '../../../hooks/useTurnos';
+import LoadingSpinner from '../../../components/LoadingSpinner';
 
-export const SiguientesTurnos = ({ nombre }) => {
-  const [fechas, setFechas] = useState([]);
-  const [textoMes, setTextoMes] = useState("");
+// const horasMes = Object.entries(turnos).reduce((total, [clave, valor]) => {
+//   if (formatearFecha(clave, {month: "numeric"}) == 8) {
+//     const horas = TURNOS[valor]?.horas || 0;
+//     return total + horas;
+//   }
+//   return total;
+// }, 0);
+export const SiguientesTurnos = () => {
+  const { turnos, loading } = useTurnos();
 
-  useEffect(() => {
-    const cargarTurnos = async () => {
-      try {
-        const docRef = doc(db, 'TURNOS', nombre);
-        const docSnap = await getDoc(docRef);
+  if (loading || !turnos) return <LoadingSpinner />;
 
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          const hoy = new Date();
-          const resultados = [];
+  const { turnos8dias, textoMes } = useMemo(() => {
+    
 
-          for (let i = 0; i <= 7; i++) {
-            const fecha = new Date(hoy);
-            fecha.setDate(hoy.getDate() + i);
+    
+    const hoy = new Date();
+    const ultimo = new Date();
+    ultimo.setDate(hoy.getDate() + 7);
 
-            const yyyy = fecha.getFullYear();
-            const mm = String(fecha.getMonth() + 1).padStart(2, '0');
-            const dd = String(fecha.getDate()).padStart(2, '0');
-            const clave = `${yyyy}-${mm}-${dd}`;
+    // Fechas entre hoy y 7 dias siguientes
+    const turnos8dias = Array.from({ length: 8 }, (_, i) => {
+      const fecha = new Date(hoy);
+      fecha.setDate(hoy.getDate() + i);
 
-            const valor = data[clave] ?? 'L';
-            resultados.push([clave, valor]);
-          }
+      const clave = fecha.toISOString().slice(0, 10); // formato AAAA-MM-DD
+      const valor = turnos[clave] ?? 'L';
 
-          setFechas(resultados);
-          console.log(resultados[0][0])
-          console.log(formatearFecha(resultados[0][0],4))
-          const resultadoTextoMes = formatearFecha(resultados[0][0], 2) === formatearFecha(resultados[7][0], 2)
-            ? formatearFecha(resultados[0][0], 4)
-            : `${formatearFecha(resultados[0][0], 4)} / ${formatearFecha(resultados[7][0], 4)}`;
-          setTextoMes(resultadoTextoMes);
-  
-        }
-      } catch (error) {
-        console.error('Error al recuperar turnos:', error);
-      }
-    };
+      return [clave, valor];
+    });
 
-    cargarTurnos();
-  }, [nombre]);
-  const anchoColumna = 100 / fechas.length + '%';
- 
+    const textoMes =
+      hoy.getMonth() === ultimo.getMonth()
+        ? formatearFecha(hoy, { month: 'long' })
+        : `${formatearFecha(hoy, { month: 'long' })} / ${formatearFecha(ultimo, { month: 'long' })}`;
+
+    return { turnos8dias, textoMes };
+  }, [turnos]);
+
+  const anchoColumna = 100 / turnos8dias.length + '%';
+
   return (
-
     <>
-    <TituloSmall texto={textoMes} />
-    <Table striped bordered className='fs-07'>      
-      <thead>
-        <tr>
-          {fechas.map(([fecha], idx) => (
-            <td key={idx} className="text-muted" style={{ width: anchoColumna, minWidth: '30px', textAlign: 'center' }}>
-              {formatearFecha(fecha, 1)}
-            </td>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          {fechas.map(([_, valor], idx) => (
-            <td key={idx} style={{ width: anchoColumna, minWidth: '30px', textAlign: 'center' }}>
-              {valor}
-            </td>
-          ))}
-        </tr>
-      </tbody>
-    </Table>
+      <Titulo titulo={textoMes} Tag="span" estilo={{ div: 'fs-08 text-muted' }} />
+      <Table bordered className="fs-07">
+        <thead>
+          <tr>
+            {turnos8dias.map(([fecha], idx) => (
+              <td
+                key={idx}
+                className="text-muted"
+                style={{ width: anchoColumna, minWidth: '30px', textAlign: 'center' }}
+              >
+                {formatearFecha(fecha, { day: '2-digit' })}
+              </td>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            {turnos8dias.map(([_, valor], idx) => {
+              let bgColor = '';
+              if (valor === 'L') bgColor = 'WhiteSmoke';
+              else if (valor.startsWith('i')) bgColor = 'LightYellow'; 
+              else if (valor.includes('M')) bgColor = 'LightBlue';
+              else if (valor.includes('T')) bgColor = 'PapayaWhipe';
+              else if (valor.includes('N')) bgColor = 'Plum'; 
+
+              return (
+                <td
+                  key={idx}
+                  style={{
+                    width: anchoColumna,
+                    minWidth: '30px',
+                    textAlign: 'center',
+                    backgroundColor: bgColor
+                  }}
+                >
+                  {valor}
+                </td>
+              );
+            })}
+          </tr>
+        </tbody>
+      </Table>
+      
     </>
   );
-}
+};

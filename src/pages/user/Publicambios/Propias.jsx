@@ -84,7 +84,7 @@ export function PublicacionesPropias() {
 
     filtradas.forEach((pub) => {
       if (!pub.fecha?.toDate) return;
-      const mes = formatearFecha(pub.fecha, 6);
+      const mes = formatearFecha(pub.fecha, { month: "long" });
 
       if (!agrupadas[mes]) agrupadas[mes] = [];
       agrupadas[mes].push(pub);

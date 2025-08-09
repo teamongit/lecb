@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { TeamOnLogo } from "../../components/Logo";
 import { Button, Card, Form, InputGroup, Row, Col, Container, Alert } from "react-bootstrap";
 import { PersonCircle, Eye, EyeSlash } from "react-bootstrap-icons";
-import { useNavigate } from "react-router-dom";
+
 import { useAuth } from "../../hooks/useAuth";
-import { db, auth } from "../../firebaseConfig";
+import { db, auth } from "../../firebase/firebaseConfig";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { getDoc, doc, setDoc, updateDoc, serverTimestamp, deleteField } from "firebase/firestore";
-import { ROUTES } from "../../utils/constants";
+
 
 function PasswordInput({ label, name, value, setValue }) {
   const [show, setShow] = useState(false);
