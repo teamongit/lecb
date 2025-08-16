@@ -8,7 +8,7 @@ import { Button, Modal } from "react-bootstrap";
 export function PublicacionesPropias() {
   const { publicaciones, loading, borrarPublicacion, editarPublicacion } = usePublicaciones();
   const { usuario } = useAuth();
-
+  
   const [expandedPubId, setExpandedPubId] = useState(null);
   const [removingId, setRemovingId] = useState(null);
   const [modalId, setModalId] = useState(null);

@@ -12,7 +12,7 @@ const ContenidoPerfil = () => {
     <Container className="pb-4">
       <Card className="shadow border-0 rounded-3">
         
-        <Card.Body className="p-3">
+        <Card.Body>
           <Row className="align-items-center mb-4">
             <Col>
               <Image src={`https://i.pravatar.cc/150?img=${n}`} roundedCircle fluid className="shadow"/>

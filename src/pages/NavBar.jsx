@@ -85,15 +85,16 @@ const NavBar = () => {
     { label: "Sectores", icon: "bi-2-circle", link: "/super/sectores" }
   ];
 
-  const userLabel = `${usuario?.apodo || ''} ${usuario?.nucleo || ''} ${usuario?.equipo || ''}`.trim();
+  // const userLabel = `${usuario?.apodo || ''} ${usuario?.nucleo || ''} ${usuario?.equipo || ''}`.trim();
+  const userLabel = usuario?.apodo;
 
   return (
     <>
       <Navbar className="text-dark p-2 mb-3 shadow px-3" bg="dark" data-bs-theme="dark">
         <Container fluid className="d-flex align-items-center">
           <Navbar.Brand onClick={handleShow} className="d-flex gap-3 align-items-center" role="button">
-            {/* <TeamOnLogo className="fs-3"/> */}
-            <List style={{fontSize:"2.8rem"}} />
+            {/* <List style={{fontSize:"2.8rem"}} /> */}
+            <TeamOnLogo className="fs-3"/>
             <div className="d-flex flex-column">
               <span className="text-white">teamOn!</span>
               <span className="text-white-50 fs-07">{userLabel}</span>
@@ -117,7 +118,7 @@ const NavBar = () => {
         <Offcanvas.Body>
           <Nav className="flex-column">
             <NavBarItem icon="bi-person-circle" label={usuario?.apodo || "Perfil"} to={ROUTES.USUARIO_PERFIL} onClose={handleClose} />
-            <NavBarItem icon="bi-calendar-week" label="Publicambios" to={ROUTES.USUARIO_PUBLICAMBIOS} onClose={handleClose} />
+            <NavBarItem icon="bi-calendar-week" label="PubliCambios" to={ROUTES.USUARIO_PUBLICAMBIOS} onClose={handleClose} />
             {/* 
             <NavBarItem icon="bi-2-circle" label="Tuturnero" to="/user/tuturnero" onClose={handleClose} />
             <NavBarItem icon="bi-3-circle" label="Nocturnos" to="/user/nocturnos" onClose={handleClose} />

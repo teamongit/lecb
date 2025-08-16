@@ -1,44 +1,51 @@
 // day: numeric, 2-digit
+// weekday: long, short
 // month: numeric, 2-digit, long, short, narrow
 // year: numeric, 2-digit
-export function formatearFecha(fechaEntrada, formato = {}) {
-  if (!fechaEntrada) return "";
+export function formatearFecha(entrada, formato = {}) {
+  if (!entrada) return "";
 
-  // Caso ISO actual
-  if (formato === "ISO" && typeof fechaEntrada === "string") {
-    return fechaEntrada;
-  }
-
-  let fecha;
-  if (fechaEntrada && typeof fechaEntrada.toDate === "function") {
-    fecha = fechaEntrada.toDate();
-  } else if (typeof fechaEntrada === "string") {
-    const [y, m, d] = fechaEntrada.split("-").map(Number);
-    fecha = new Date(y, m - 1, d);
-  } else if (fechaEntrada instanceof Date) {
-    fecha = fechaEntrada;
+  let salida;
+  // Caso: Timestamp to Date
+  if (entrada && typeof entrada.toDate === "function") {
+    salida = entrada.toDate();
+  // Caso: String  
+  } else if (typeof entrada === "string") {
+    const [y, m, d] = entrada.split("-").map(Number);
+    salida = new Date(y, m - 1, d);
+  } else if (entrada instanceof Date) {
+    salida = entrada;
   } else {
     return "";
-  }
+  }  
 
   // Nuevo caso AAAA-MM-DD
-  if (formato === "AAAA-MM-DD") {
-    const año = fecha.getFullYear();
-    const mes = String(fecha.getMonth() + 1).padStart(2, "0");
-    const dia = String(fecha.getDate()).padStart(2, "0");
+  if (formato === "aaaa-mm-dd") {
+    const año = salida.getFullYear();
+    const mes = String(salida.getMonth() + 1).padStart(2, "0");
+    const dia = String(salida.getDate()).padStart(2, "0");
     return `${año}-${mes}-${dia}`;
   }
 
-  return fecha.toLocaleDateString("es-ES", { timeZone: "Europe/Madrid", ...formato });
+  return salida.toLocaleDateString("es-ES", { timeZone: "Europe/Madrid", ...formato });
 }
 
 
 
 
 // Comparar dos objetos Timestamp
-// convertir a fecha y luego milisegundos
+// convertir a salida y luego milisegundos
 export const esMismaFecha = (a, b) => a.toDate().getTime() === b.toDate().getTime();
-
+// Si queremos comparar solo el dia, ignorando hora 
+// export const esMismaFecha = (a, b) => {
+//   const fa = a.toDate();
+//   const fb = b.toDate();
+//   return (
+//     fa.getFullYear() === fb.getFullYear() &&
+//     fa.getMonth() === fb.getMonth() &&
+//     fa.getDate() === fb.getDate()
+//   );
+// };
 export function horasMinutos(decimal) {
   const horas = Math.floor(decimal);
   const minutos = Math.round((decimal - horas) * 60);

@@ -32,7 +32,7 @@ export const usePublicaciones = () => {
 
     const q = query(
       collection(db, "PUBLICACIONES"),
-      where("fecha", ">=", Timestamp.fromDate(hoy)),
+      where("fecha", ">=", Timestamp.fromDate(hoy)),      
       where("nucleo", "in", nucleos),
       orderBy("fecha", "asc")
     );
@@ -55,8 +55,8 @@ export const usePublicaciones = () => {
         return "duplicado";
       }
       // Agregar publicacion
-      // Filtrar publicaciones existentes compatibles
-      const pubsMatch = publicaciones.filter(pub => esMatch(pub, nuevaPub));
+      // Filtrar publicaciones existentes compatibles 
+      const pubsMatch = publicaciones.filter(pub => esMatch(nuevaPub, pub));
 
       // 1. Añadir candidatos a nuevaPub
       if (pubsMatch.length) {
@@ -64,7 +64,7 @@ export const usePublicaciones = () => {
       }
       const colRef = collection(db, "PUBLICACIONES");
       const docRef = await addDoc(colRef, nuevaPub);
-      const { nombre, apodo, equipo, nucleo, ofrece } = nuevaPub;
+      const { nombre, apodo, equipo, nucleo } = nuevaPub;
       // 2. Añadir usuario que publica como candidato a las publicaciones que ya existen: en firestore y en local
       // Evitar racing si hay muchas publicaciones simultaneas
       await Promise.all(
@@ -76,7 +76,6 @@ export const usePublicaciones = () => {
               apodo,
               equipo,
               nucleo,
-              turno: ofrece.turno,
               pubId: docRef.id,
               asignado: false,
             }),

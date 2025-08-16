@@ -41,7 +41,10 @@ export function PublicacionesTodas() {
   // Filtrar o agrupar publicaciones
   const publicacionesPorMes = useMemo(() => {
     const agrupadas = {};
-    publicaciones.forEach((pub) => {
+    
+    publicaciones
+    .filter(pub => pub.nombre !== usuario.nombre) 
+    .forEach((pub) => {
       if (!pub.fecha?.toDate) return;
       const mes = formatearFecha(pub.fecha, {month: "long"});
       if (!agrupadas[mes]) agrupadas[mes] = [];
@@ -98,15 +101,13 @@ export function PublicacionesTodas() {
 
   return (
     <>
-      <div className="m-3">Añadir filtros aquí</div>
       {Object.entries(publicacionesPorMes).length 
       ? (Object.entries(publicacionesPorMes).map(([mes, pubs]) => (
           <div key={mes}>
             <h4 className="bg-secondary text-white mx-0 p-2 rounded">{mes}</h4>
             {pubs.map((pub) => {
               const hayAsignado = pub.candidatos.some(c => c.asignado);
-              const hayCandidatos = pub.candidatos.length;
-              const esPropia = usuario.nombre === pub.nombre;
+              const hayCandidatos = pub.candidatos.length;              
               const variant = hayAsignado 
                 ? "success" 
                 : hayCandidatos 
@@ -117,7 +118,7 @@ export function PublicacionesTodas() {
                 <PubItem
                   key={pub.id}
                   pub={pub}
-                  esPropia={esPropia}
+                  esPropia={false}
                   variant={variant}
                   onClick={() => setModalPub(pub)}
                   onToggleExpand={() => setModalPub(pub)}
@@ -142,8 +143,8 @@ export function PublicacionesTodas() {
             </Modal.Title>
           </Modal.Header>
           <Modal.Body id="modal-detalle-desc">
-            <p>{formatearFecha(modalPub.fecha, {month: "long"})} : {modalPub.ofrece.turno} x {modalPub.solicita.turno} ({modalPub.modalidad})</p>
-
+            <p><strong>Fecha: </strong>{formatearFecha(modalPub.fecha, {weekday: "short", day:"numeric", month: "long"})} </p>
+            
             {modalPub.comentarios && (<p><strong>Comentarios:</strong> {modalPub.comentarios}</p>)}
             <p><strong>Candidatos:</strong></p>
             <ul>
