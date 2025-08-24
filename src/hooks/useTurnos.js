@@ -7,12 +7,14 @@ export const useTurnos = () => {
   if (!context)
     throw new Error("useTurnos debe usarse dentro de un TurnosProvider");
 
-  const { turnos, loading } = context;
+  const { turnos, loading, turneros, cambiarTurno } = context;
   const tieneTurnos = !!turnos;
 
   return {
     turnos,
     tieneTurnos,
     loading,
+    turneros,
+    cambiarTurno,
   };
 };

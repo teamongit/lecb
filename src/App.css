@@ -12,9 +12,27 @@
   .mi-color-fondo, ul.dropdown-menu.show {
     background-color: #3a67b1 !important;    
   }
+  .mi-navbar {
+    background-color: #3a67b1 !important; /* fondo */
+  }
+
+  .mi-navbar .navbar-brand,
+  .mi-navbar .nav-link,
+  .mi-navbar .offcanvas,
+  
+  .mi-navbar .navbar-toggler-icon,
+  .mi-navbar .navbar-text {
+    color: #fff !important; /* texto e iconos en blanco */
+}
   .mi-color{
     color: #3a67b1;    
   }
+[data-bs-theme="dark"] {
+  --bs-dark-rgb: 58, 103, 177;  /* tu color principal */
+  --bs-body-bg: rgb(58, 103, 177); 
+  --bs-offcanvas-bg: rgb(58, 103, 177); /* fondo del menú lateral */
+  --bs-offcanvas-color: #fff;           /* color del texto */
+}
   .icono-sombra {
     filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.3));
   }

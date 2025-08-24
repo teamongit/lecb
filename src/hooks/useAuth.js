@@ -7,8 +7,8 @@ export const useAuth = () => {
   if (!context) 
     throw new Error('useAuth debe usarse dentro de un AuthProvider');
   
-  const { autenticado, usuario, loading, login, logout } = context;
+  const { autenticado, usuario, loading, login, logout, resetPw } = context;
   const esAutenticado = !!usuario; // boolean
 
-  return { autenticado, esAutenticado, usuario, loading, login, logout };
+  return { autenticado, esAutenticado, usuario, loading, login, logout, resetPw };
 };

@@ -77,7 +77,7 @@ export function PublicacionesPropias() {
   );
 
   const publicacionesPorMes = useMemo(() => {
-    if (!usuario?.nombre) return {};
+    if (!usuario) return {};
 
     const agrupadas = {};
     const filtradas = publicaciones.filter(pub => pub.nombre === usuario.nombre);

@@ -5,7 +5,6 @@ import { usePublicaciones } from "../../../hooks/usePublicaciones";
 import { formatearFecha } from "../../../utils/fechas";
 import { Button, Modal } from "react-bootstrap";
 
-
 const BotonesModal = ({ modalPub, usuario, apuntando, setModalPub, handleApuntarme, handleBorrarme }) => {
   const esPropia = modalPub.nombre === usuario.nombre;
   const yaApuntado = modalPub.candidatos?.some(c => c.nombre === usuario.nombre);
@@ -31,10 +30,10 @@ const BotonesModal = ({ modalPub, usuario, apuntando, setModalPub, handleApuntar
   );
 };
 
-export function PublicacionesTodas() {
+export function Apuntado() {
   const { publicaciones, editarPublicacion } = usePublicaciones();
   const { usuario } = useAuth();
-
+  
   const [modalPub, setModalPub] = useState(null); 
   const [apuntando, setApuntando] = useState(false);
 
@@ -43,7 +42,7 @@ export function PublicacionesTodas() {
     const agrupadas = {};
     
     publicaciones
-    .filter(pub => pub.nombre !== usuario.nombre)     
+    .filter(pub => pub.candidatos.some(u => u.nombre === usuario.nombre))     
     .forEach(pub => {
       if (!pub.fecha?.toDate) return;
       const mes = formatearFecha(pub.fecha, {month: "long"});
@@ -143,24 +142,6 @@ export function PublicacionesTodas() {
           </Modal.Header>
           <Modal.Body id="modal-detalle-desc">
             <p><strong>Fecha: </strong>{formatearFecha(modalPub.fecha, {weekday: "short", day:"numeric", month: "long"})} </p>
-              
-            <p>
-              <strong>{modalPub.tipo}: </strong>
-              {(() => {
-                let parte1 = "";
-                let parte2 = "";
-                if (modalPub.tipo === "quitar") {
-                  parte1 = modalPub.quitarTurno;
-                } else if (modalPub.tipo === "hacer") {
-                  parte1 = modalPub.hacerTurnos.join(", ");
-                } else if (modalPub.tipo === "cambiar") {
-                  parte1 = modalPub.quitarTurno;
-                  parte2 = " x " + modalPub.hacerTurnos.join(", ");
-                }
-                const texto = parte1 + parte2;
-                return texto.length > 11 ? texto.slice(0, 20) + "..." : texto;
-              })()}
-            </p>
             
             {modalPub.comentarios && (<p><strong>Comentarios:</strong> {modalPub.comentarios}</p>)}
             <p><strong>Candidatos:</strong></p>

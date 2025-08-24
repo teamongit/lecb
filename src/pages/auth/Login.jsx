@@ -8,10 +8,9 @@ import { db, auth } from "../../firebase/firebaseConfig";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { getDoc, doc, setDoc, updateDoc, serverTimestamp, deleteField } from "firebase/firestore";
 
-
 function PasswordInput({ label, name, value, setValue }) {
   const [show, setShow] = useState(false);
-
+  
   return (
     <Form.Group className="mb-3" controlId={name}>
       <InputGroup>
@@ -46,6 +45,8 @@ function FormRegister({ setViewLogin, setMensaje }) {
 
   useEffect(() => {
     const cargarNombres = async () => {
+
+
       try {
         // Doc lista de nombres sin registrar en dependencia
         const docRef = doc(db, "USUARIOS", "#LECB");
@@ -65,7 +66,7 @@ function FormRegister({ setViewLogin, setMensaje }) {
 
   const Registrar = async (e) => {
     e.preventDefault();
-
+     
     const form = e.target;
     const get = (name) => form.elements[name].value.trim();
 
@@ -119,9 +120,19 @@ function FormRegister({ setViewLogin, setMensaje }) {
         await sendEmailVerification(registrado);
       } catch (error) {
         console.error("Error al enviar email de verificación:", error);
+        let textoError = "Error al registrar usuario";
+
+        if (error.code === "auth/email-already-in-use") {
+          textoError = "El email ya está en uso";
+        } else if (error.code === "auth/invalid-email") {
+          textoError = "El email no es válido";
+        } else if (error.code === "auth/weak-password") {
+          textoError = "La contraseña es demasiado débil (mínimo 6 caracteres)";
+        }
+
         setMensaje({
-          texto: "No se pudo enviar el email de verificación",
-          clase: "danger"
+          texto: textoError,
+          clase: "danger",
         });
       }
       
@@ -174,7 +185,7 @@ function FormRegister({ setViewLogin, setMensaje }) {
       } else if (error.code === "auth/invalid-email") {
         textoError = "El email no es válido";
       } else if (error.code === "auth/weak-password") {
-        textoError = "La contraseña es demasiado débil";
+        textoError = "La contraseña es demasiado débil (mínimo 6 carácteres)";
       }
       setMensaje({
         texto: textoError,
@@ -192,8 +203,9 @@ function FormRegister({ setViewLogin, setMensaje }) {
         </InputGroup>
       </Form.Group>
       
-      <PasswordInput label="Contraseña" placeholder="Contraseña" name="password1" value={password1} setValue={setPassword1} />
-      <PasswordInput label="Repetir" placeholder="Repetir" name="password2" value={password2} setValue={setPassword2} />
+      {/* <small className="text-muted d-block m-0 p-0">Debe tener al menos 6 caracteres</small> */}
+      <PasswordInput label="Contraseña" name="password1" value={password1} setValue={setPassword1} />
+      <PasswordInput label="Repetir" name="password2" value={password2} setValue={setPassword2} />
 
       <Form.Group className="mb-3" controlId="apodo">
         <InputGroup>
@@ -220,7 +232,7 @@ function FormRegister({ setViewLogin, setMensaje }) {
           ))}
         </Form.Select>
       </InputGroup>
-      <br />
+      <br />      
       <br />
 
       <Row className="mb-4">
@@ -238,9 +250,22 @@ function FormRegister({ setViewLogin, setMensaje }) {
     </Form>
   );
 }
+
 function FormLogin({ setViewLogin, setMensaje }) {
-  const { login } = useAuth();
+  const { login, resetPw } = useAuth();
   const [password, setPassword] = useState("");
+  
+
+  const handleResetPw = async (e) => {    
+    e.preventDefault();
+    const email = document.querySelector("input[name='email']").value.trim();    
+    if (!email) {
+      alert("Ingresa tu email primero");
+      return;
+    }
+    const result = await resetPw(email);
+    alert(result.success ? result.message : "Error: " + result.message);
+  };
 
 
   const Entrar = async (e) => {
@@ -274,7 +299,13 @@ function FormLogin({ setViewLogin, setMensaje }) {
       </Form.Group>
       <PasswordInput label="Contraseña" placeholder="Contraseña" name="password" value={password} setValue={setPassword} />
       
-      <Button id="btn-recordar" variant="link" className="text-secondary text-decoration-underline mb-5 p-0">
+      <Button 
+        id="btn-recordar" 
+        variant="link" 
+        className="text-secondary text-decoration-underline mb-5 p-0"
+        onClick={handleResetPw}
+      >
+
         Recordar contraseña al correo
       </Button>
 

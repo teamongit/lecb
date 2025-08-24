@@ -1,42 +1,17 @@
-export function formatearTurno(servicio, duracion, funcion) {
-  // let turno = servicio;
-  // // imaginaria
-  // if (funcion == "Img") turno = "i" + turno;
-  // // noche
-  // if (servicio == "N") {
-  //   if (funcion == "Sup") turno += "Sup";
-  //   if (funcion == "Ins") turno += "A2";
-  //   return turno;       
-  // }
-  // // supervisor
-  // if (funcion == "Sup") return turno + "Sup";
-  // // duraciones
-  // if (tipo == "c") turno += "c";
-  // if (tipo == "l") turno += "l";
-  // // instruccion
-  // if (funcion == "A2") turno += "A2";            
-  
-  // return turno;      
+import { TURNOS } from "./constants";
 
-  // let turno = servicio;
-  // if (funcion.includes("Imaginaria")) turno = "i" + turno;
-  // if (servicio == "N") {
-  //   if (funcion.includes("Supervisor")) turno += "Sup";
-  //   if (funcion.includes("Instructor")) turno += "A2";
-  //   return turno;       
-  // }
-  // // supervisor
-  // if (funcion.includes("Supervisor")) return turno + "Sup";
-  
-  // if (duracion !== "Cualquiera") {
-  //   if (duracion === "Corta") turno += "c";
-  //   else if (duracion === "Larga") turno += "l";
-  // }
-  // // instruccion
-  // if (funcion.includes("Instructor")) turno += "A2";
+export function formatearTurno(servicio, duracion, funcion) {
   if (!servicio) return null;
   let turno = servicio;         
-  if (duracion) turno += " (" + duracion + ") ";
+  if (duracion) turno += duracion;
   if (funcion.length) turno += " (" + funcion.join(", ") + ") ";  
   return turno;      
+}
+
+const ORDEN_JORNADA = ["M", "T", "N"];
+export function filtrarOpcionesTurnos(turneroFecha) {  
+  if (!turneroFecha) return {};
+  return Object.keys(turneroFecha)
+    .filter(t => TURNOS[t])
+    .sort((a, b) => ORDEN_JORNADA.indexOf(TURNOS[a].jornada) - ORDEN_JORNADA.indexOf(TURNOS[b].jornada));
 }

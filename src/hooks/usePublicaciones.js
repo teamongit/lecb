@@ -49,6 +49,7 @@ export const usePublicaciones = () => {
 
   // Create Publicacion con candidatos compatibles y actualizar publicaciones existentes añadiendo al usuario como candidato
   const agregarPublicacion = async (nuevaPub) => {    
+    console.log(nuevaPub)
     try {
       // Buscar duplicados localmente: No agregar publicacion
       if (esDuplicado(publicaciones, nuevaPub)) {
@@ -56,35 +57,35 @@ export const usePublicaciones = () => {
       }
       // Agregar publicacion
       // Filtrar publicaciones existentes compatibles 
-      const pubsMatch = publicaciones.filter(pub => esMatch(nuevaPub, pub));
+      // const pubsMatch = publicaciones.filter(pub => esMatch(nuevaPub, pub));
 
       // 1. Añadir candidatos a nuevaPub
-      if (pubsMatch.length) {
-        anadirCandidatos(pubsMatch, nuevaPub);
-      }
+      // if (pubsMatch.length) {
+      //   anadirCandidatos(pubsMatch, nuevaPub);
+      // }
       const colRef = collection(db, "PUBLICACIONES");
       const docRef = await addDoc(colRef, nuevaPub);
-      const { nombre, apodo, equipo, nucleo } = nuevaPub;
-      // 2. Añadir usuario que publica como candidato a las publicaciones que ya existen: en firestore y en local
-      // Evitar racing si hay muchas publicaciones simultaneas
-      await Promise.all(
-        pubsMatch.map(pubMatch => {
-          const docMatchRef = doc(db, "PUBLICACIONES", pubMatch.id);
-          return updateDoc(docMatchRef, {
-            candidatos: arrayUnion({
-              nombre,
-              apodo,
-              equipo,
-              nucleo,
-              pubId: docRef.id,
-              asignado: false,
-            }),
-          });
-        })
-      );
+      // const { nombre, apodo, equipo, nucleo } = nuevaPub;
+      // // 2. Añadir usuario que publica como candidato a las publicaciones que ya existen: en firestore y en local
+      // // Evitar racing si hay muchas publicaciones simultaneas
+      // await Promise.all(
+      //   pubsMatch.map(pubMatch => {
+      //     const docMatchRef = doc(db, "PUBLICACIONES", pubMatch.id);
+      //     return updateDoc(docMatchRef, {
+      //       candidatos: arrayUnion({
+      //         nombre,
+      //         apodo,
+      //         equipo,
+      //         nucleo,
+      //         pubId: docRef.id,
+      //         asignado: false,
+      //       }),
+      //     });
+      //   })
+      // );
       
       // TODO: Para que devolvemos esto?
-      return { id: docRef.id, ...nuevaPub };
+      return "exito";
 
     } catch (error) {
       console.error("Error al agregar publicación:", error);

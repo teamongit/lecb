@@ -25,6 +25,15 @@
       "cwd": "${workspaceFolder}",
       "runtimeArgs": [],
       "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Depurar avanzar.js",
+      "program": "${workspaceFolder}/src/pages/user/PideVacas/avanzar.js",
+      "cwd": "${workspaceFolder}",
+      "runtimeArgs": [],
+      "skipFiles": ["<node_internals>/**"]
     }
   ]
 }
