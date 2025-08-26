@@ -114,8 +114,7 @@ export function SubirFoto() {
     <div style={{ textAlign: "center", marginTop: 20 }}>
       <div style={{ marginBottom: 20 }}>
         <img
-          src={preview || "/img/no-photo.png"}
-          alt="Foto de perfil"
+          src={preview || "/img/no-photo.png"}          
           width={256}
           height={256}
           style={{ borderRadius: "50%", objectFit: "cover" }}

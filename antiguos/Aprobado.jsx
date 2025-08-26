@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
-import { PubItem } from "./PubItem";
-import { useAuth } from "../../../hooks/useAuth";
-import { usePublicaciones } from "../../../hooks/usePublicaciones";
-import { formatearFecha } from "../../../utils/fechas";
+import { PubItem } from "./PubItem2";
+import { useAuth } from "../src/hooks/useAuth";
+import { usePublicaciones } from "../src/hooks/usePublicaciones";
+import { formatearFecha } from "../src/utils/fechas";
 import { Button, Modal } from "react-bootstrap";
 
 const BotonesModal = ({ modalPub, usuario, apuntando, setModalPub, handleApuntarme, handleBorrarme }) => {
@@ -30,7 +30,7 @@ const BotonesModal = ({ modalPub, usuario, apuntando, setModalPub, handleApuntar
   );
 };
 
-export function Apuntado() {
+export function Aprobado() {
   const { publicaciones, editarPublicacion } = usePublicaciones();
   const { usuario } = useAuth();
   

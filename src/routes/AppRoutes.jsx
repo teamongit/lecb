@@ -10,19 +10,19 @@ import Login from '../pages/auth/Login';
 import NoAutorizado from '../pages/auth/NoAutorizado';
 
 import Perfil from '../pages/user/Perfil/Perfil';
-import UserNocturnos from '../pages/user/UserNocturnos';
+// import UserNocturnos from '../pages/user/UserNocturnos';
 import Publicambios from '../pages/user/Publicambios/Publicambios';
-import TuTurnero from '../pages/user/Tuturnero/Tuturnero';
+import Tuturnero from '../pages/user/Tuturnero/Tuturnero';
 // import UserPidevacas from '../pages/user/UserPidevacas';
 import { Pidevacas } from '../pages/user/PideVacas/Pidevacas';
-import AdminUsuarios from '../pages/admin/AdminUsuarios';
-import AdminHvoluntarias from '../pages/admin/AdminHvoluntarias';
-import FurriNocturnos from '../pages/furri/FurriNocturnos';
-import FurriPidevacas from '../pages/furri/FurriPidevacas';
-import SuperEscalonada from '../pages/super/SuperEscalonada';
-import SuperSectores from '../pages/super/SuperSectores';
+// import AdminUsuarios from '../pages/admin/AdminUsuarios';
+// import AdminHvoluntarias from '../pages/admin/AdminHvoluntarias';
+// import FurriNocturnos from '../pages/furri/FurriNocturnos';
+// import FurriPidevacas from '../pages/furri/FurriPidevacas';
+// import SuperEscalonada from '../pages/super/SuperEscalonada';
+// import SuperSectores from '../pages/super/SuperSectores';
 
-import { PublicacionesProvider } from "../context/PublicacionesContext";
+
 import { useAuth } from '../hooks/useAuth';
 import { TurnosProvider } from '../context/TurnosProvider';
 import { VacacionesProvider } from '../context/VacacionesContext';
@@ -45,29 +45,29 @@ const AppRoutes = () => {
         {/* Rutas comunes para todos los roles */}
         <Route element={<AuthGuard rolesPermitidos={Object.values(ROLES)} />}>
           <Route path={ROUTES.USUARIO_PERFIL} element={<Perfil />} />
-          <Route path={ROUTES.USUARIO_NOCTURNOS} element={<UserNocturnos />} />
+          {/* <Route path={ROUTES.USUARIO_NOCTURNOS} element={<UserNocturnos />} /> */}
           <Route path={ROUTES.USUARIO_PIDEVACAS} element={<VacacionesProvider><Pidevacas /></VacacionesProvider>} />
-          <Route path={ROUTES.USUARIO_PUBLICAMBIOS} element={<PublicacionesProvider><Publicambios /></PublicacionesProvider>}/>
-          <Route path={ROUTES.USUARIO_TUTURNERO} element={<TurnosProvider><TuTurnero /></TurnosProvider>}/>
+          <Route path={ROUTES.USUARIO_PUBLICAMBIOS} element={<Publicambios />}/>
+          <Route path={ROUTES.USUARIO_TUTURNERO} element={<TurnosProvider><Tuturnero /></TurnosProvider>}/>
           
 
           {/* ---- Admin Routes ---- */}
-          <Route element={<AuthGuard rolesPermitidos={[ROLES.ADMIN]} />}>
+          {/* <Route element={<AuthGuard rolesPermitidos={[ROLES.ADMIN]} />}>
             <Route path={ROUTES.ADMIN_USUARIOS} element={<AdminUsuarios />} />
             <Route path={ROUTES.ADMIN_HVOLUNTARIAS} element={<AdminHvoluntarias />} />
-          </Route>
+          </Route> */}
 
           {/* ---- Furri Routes ---- */}
-          <Route element={<AuthGuard rolesPermitidos={[ROLES.FURRI]} />}>
+          {/* <Route element={<AuthGuard rolesPermitidos={[ROLES.FURRI]} />}>
             <Route path={ROUTES.FURRI_NOCTURNOS} element={<FurriNocturnos />} />
             <Route path={ROUTES.FURRI_PIDEVACAS} element={<VacacionesProvider><FurriPidevacas /></VacacionesProvider> } />
-          </Route>
+          </Route> */}
 
           {/* ---- Super Routes ---- */}
-          <Route element={<AuthGuard rolesPermitidos={[ROLES.SUPER]} />}>
+          {/* <Route element={<AuthGuard rolesPermitidos={[ROLES.SUPER]} />}>
             <Route path={ROUTES.SUPER_ESCALONADA} element={<SuperEscalonada />} />
             <Route path={ROUTES.SUPER_SECTORES} element={<SuperSectores />} />
-          </Route>
+          </Route> */}
         </Route>
       </Route>
 

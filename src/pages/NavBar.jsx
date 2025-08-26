@@ -59,7 +59,8 @@ const NavBarSubMenu = ({ icon, label, items, onClose }) => {
 const NavBar = () => {
   const navigate = useNavigate();
   const [show, setShow] = useState(false);
-  const { usuario, logout, loading } = useAuth();
+  const { usuario, logout } = useAuth();
+  
 
   const handleLogout = async () => {
     await logout();  
@@ -94,7 +95,7 @@ const NavBar = () => {
             <TeamOnLogo className="fs-3"/>
             <div className="d-flex flex-column">
               <span className="text-white">teamOn!</span>
-              <span className="text-white-50 fs-07">{usuario.apodo}</span>
+              <span className="text-white-50 fs-07">{usuario?.apodo}</span>
             </div>
           </Navbar.Brand>
             <Power className="text-white fs-1" onClick={handleLogout} role="button"/>

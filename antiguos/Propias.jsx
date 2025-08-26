@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { PubItem } from "./PubItem";
+import { PubItem } from "../../../../antiguos/PubItem2";
 import { useAuth } from "../../../hooks/useAuth";
 import { usePublicaciones } from "../../../hooks/usePublicaciones";
 import { formatearFecha } from "../../../utils/fechas";

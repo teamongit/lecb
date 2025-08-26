@@ -1,6 +1,6 @@
 // context/TurnosProvider.js
 import { createContext, useContext, useEffect, useState } from "react";
-import { doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, arrayRemove, arrayUnion } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { useAuth } from "../hooks/useAuth";
 
@@ -10,7 +10,7 @@ export const TurnosProvider = ({ children }) => {
   const { usuario, loading: loadingUsuario } = useAuth();
   const [turnos, setTurnos] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [turneros, setTurneros] = useState(null);
+  const [turnero, setTurnero] = useState(null);
 
   useEffect(() => {
     if (loadingUsuario || !usuario) return;
@@ -46,8 +46,8 @@ export const TurnosProvider = ({ children }) => {
     const nucleo = usuario.nucleo.includes("RUTA") ? "RUTA" : "TMA";
 
     // cache local por ID de doc -> data
-    const cacheTurneros = {};
-    const unsubTurneros = [];
+    const cacheTurnero = {};
+    const unsubTurnero = [];
 
     for (let offset = 0; offset <= 2; offset++) {
       const fecha = new Date(hoy.getFullYear(), hoy.getMonth() + offset, 1);
@@ -59,16 +59,16 @@ export const TurnosProvider = ({ children }) => {
         doc(db, "TURNEROS_PUBLICADOS", id),
         (docSnap) => {
           if (docSnap.exists()) {
-            cacheTurneros[id] = docSnap.data();
+            cacheTurnero[id] = docSnap.data();
           } else {
-            delete cacheTurneros[id];
+            delete cacheTurnero[id];
           }
 
           // fusionar TODOS los docs en un único objeto plano (igual que con Object.assign en tu getDoc)
           const turnosAcumulados = {};
-          Object.values(cacheTurneros).forEach((obj) => Object.assign(turnosAcumulados, obj));
+          Object.values(cacheTurnero).forEach((obj) => Object.assign(turnosAcumulados, obj));
 
-          setTurneros(
+          setTurnero(
             Object.keys(turnosAcumulados).length ? turnosAcumulados : null
           );
           setLoading(false);
@@ -79,22 +79,22 @@ export const TurnosProvider = ({ children }) => {
         }
       );
 
-      unsubTurneros.push(unsub);
+      unsubTurnero.push(unsub);
     }
 
     // limpieza
     return () => {
       unsubTurnos();
-      unsubTurneros.forEach((fn) => fn());
+      unsubTurnero.forEach((fn) => fn());
     };
   }, [usuario, loadingUsuario]);
 
-  // Mantengo tu API y actualización optimista
-  const cambiarTurno = async (fecha, nuevoTurno) => {
-    if (!usuario || !turnos) return;
+  
+  const cambiarTurno = async (fecha, nombre, nuevoTurno) => {
+    // if (!usuario || !turnos) return;
 
     try {
-      const docRef = doc(db, "TURNOS", usuario.nombre);
+      const docRef = doc(db, "TURNOS", nombre);
       // Optimista: igual que en tu original
       setTurnos((prev) => ({ ...(prev || {}), [fecha]: nuevoTurno }));
       await updateDoc(docRef, { [fecha]: nuevoTurno });
@@ -104,8 +104,35 @@ export const TurnosProvider = ({ children }) => {
     }
   };
 
+  const intercambiarTurnos = async (fecha, usuarioNombre, usuarioTurno, candidatoNombre, candidatoTurno, ) => {
+    try {
+      console.log(fecha, usuarioNombre, usuarioTurno, candidatoNombre, candidatoTurno);
+      const [aaaa, mm, dd] = fecha.split("-");
+      const nucleoDependencia = usuario.nucleo.includes("RUTA") ? "RUTA" : usuario.nucleo;
+      const docId = `${usuario.dependencia}_${aaaa}_${mm}_${nucleoDependencia}`;
+      const docRef = doc(db, "TURNEROS_ACTUALIZADOS", docId);
+
+      // quitar
+      await updateDoc(docRef, {
+        [`${fecha}.${usuarioTurno}`]: arrayRemove(usuarioNombre),
+        [`${fecha}.${candidatoTurno}`]: arrayRemove(candidatoNombre)
+      });
+      // añadir
+      await updateDoc(docRef, {
+        [`${fecha}.${usuarioTurno}`]: arrayUnion(candidatoNombre),
+        [`${fecha}.${candidatoTurno}`]: arrayUnion(usuarioNombre)
+      });
+      // intercambiar
+      await cambiarTurno(fecha, candidatoNombre, usuarioTurno);
+      await cambiarTurno(fecha, usuarioNombre, candidatoTurno);
+      
+    } catch (error) {
+      console.error("Error al actualizar el turno:", error);
+    }
+  };
+
   return (
-    <TurnosContext.Provider value={{ turnos, loading, turneros, cambiarTurno }}>
+    <TurnosContext.Provider value={{ turnos, loading, turnero, cambiarTurno, intercambiarTurnos }}>
       {children}
     </TurnosContext.Provider>
   );

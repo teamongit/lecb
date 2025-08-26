@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
-import { PubItem } from "./PubItem";
-import { useAuth } from "../../../hooks/useAuth";
-import { usePublicaciones } from "../../../hooks/usePublicaciones";
-import { formatearFecha } from "../../../utils/fechas";
+import { PubItem } from "./PubItem2";
+import { useAuth } from "../src/hooks/useAuth";
+import { usePublicaciones } from "../src/hooks/usePublicaciones";
+import { formatearFecha } from "../src/utils/fechas";
 import { Button, Modal } from "react-bootstrap";
 
 
@@ -149,11 +149,11 @@ export function PublicacionesTodas() {
               {(() => {
                 let parte1 = "";
                 let parte2 = "";
-                if (modalPub.tipo === "quitar") {
+                if (modalPub.tipo === "Quitar") {
                   parte1 = modalPub.quitarTurno;
-                } else if (modalPub.tipo === "hacer") {
+                } else if (modalPub.tipo === "Hacer") {
                   parte1 = modalPub.hacerTurnos.join(", ");
-                } else if (modalPub.tipo === "cambiar") {
+                } else if (modalPub.tipo === "Cambiar") {
                   parte1 = modalPub.quitarTurno;
                   parte2 = " x " + modalPub.hacerTurnos.join(", ");
                 }
@@ -161,6 +161,7 @@ export function PublicacionesTodas() {
                 return texto.length > 11 ? texto.slice(0, 20) + "..." : texto;
               })()}
             </p>
+            <p><strong>Modalidad: </strong>{modalPub.modalidad}</p>
             
             {modalPub.comentarios && (<p><strong>Comentarios:</strong> {modalPub.comentarios}</p>)}
             <p><strong>Candidatos:</strong></p>

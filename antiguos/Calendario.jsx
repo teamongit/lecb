@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { formatearFecha } from "../../../utils/fechas";
-import { COLORES_TURNOS, TURNOS } from "../../../utils/constants";
+import { formatearFecha } from "../src/utils/fechas";
+import { COLORES_TURNOS, TURNOS } from "../src/utils/constants";
 import { Button, Form, ListGroup } from "react-bootstrap";
-import { useTurnos } from "../../../hooks/useTurnos";
+import { useTurnos } from "../src/hooks/useTurnos";
 function ListaAccionesDia({ fecha, turnos, cambiarTurno, onClose }) {
   
   const [mostrarSelect, setMostrarSelect] = useState(false);
@@ -10,8 +10,9 @@ function ListaAccionesDia({ fecha, turnos, cambiarTurno, onClose }) {
   const {turneros} = useTurnos();
   
   const handleCambiarTurno = async () => {
+    const { usuario } = useAuth();
     if (!nuevoTurno) return;
-    await cambiarTurno(fecha, nuevoTurno); // actualizar estado + firestore
+    await cambiarTurno(fecha, usuario.nombre, nuevoTurno); // actualizar estado + firestore
     onClose(); // cerrar menú
   };
 

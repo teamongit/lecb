@@ -5,6 +5,7 @@ import { SiguientesTurnos } from "./SiguientesTurnos";
 import { Container, Card } from 'react-bootstrap';
 import Divider from "@mui/material/Divider";
 
+
 export default function Perfil() {
  const { usuario } = useAuth();
 
@@ -21,6 +22,7 @@ export default function Perfil() {
           <Divider sx={{ mb: 2, color: "text.secondary" }}>Datos de usuario</Divider>
           <DatosUsuario />
           <hr />
+          
         </Card.Body>
       </Card>
     </Container>

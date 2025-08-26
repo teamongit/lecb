@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   collection,
   query,
@@ -10,135 +10,130 @@ import {
   deleteDoc,
   updateDoc,
   Timestamp,
-  arrayUnion,
 } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
-import { useAuth } from "../hooks/useAuth";
-import { anadirCandidatos, esDuplicado, esMatch } from "../utils/publicaciones";
+import { db } from "@/firebase/firebaseConfig";
+import { useAuth } from "@/hooks/useAuth";
+import { esDuplicado } from "@/utils/publicaciones";
 
 export const usePublicaciones = () => {
   const { usuario } = useAuth();
+
   const [publicaciones, setPublicaciones] = useState([]);
-  const [loading, setLoading] = useState(true);
-  // CRUD básico de publicaciones
-  // Read Publicaciones filtradas (query): Listener tiempo real
+  const [loading, setLoading] = useState(true); // carga inicial
+  const [procesando, setProcesando] = useState(false); // CRUD
+
+  // Leer Listener tiempo real
   useEffect(() => {
+    if (!usuario) return; // esperar a que usuario esté listo
+
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
-    // TODO: En el futuro cambiar si solo somos compatibles dentro del mismo nucleo
-    const nucleos = usuario.nucleo.includes("RUTA")
-      ? ["RUTAE", "RUTAW"]
-      : ["TMA"];
+
+    const nucleos = usuario.nucleo.includes("RUTA") ? ["RUTAE", "RUTAW"] : ["TMA"];
 
     const q = query(
       collection(db, "PUBLICACIONES"),
-      where("fecha", ">=", Timestamp.fromDate(hoy)),      
+      where("fecha", ">=", Timestamp.fromDate(hoy)),
       where("nucleo", "in", nucleos),
       orderBy("fecha", "asc")
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      // Añadimos el campo id del doc a cada publicacion
-      const docsPublicaciones = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setPublicaciones(docsPublicaciones);
-      setLoading(false);
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const docsPublicaciones = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setPublicaciones(docsPublicaciones);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error en listener de publicaciones:", error);
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
-  }, []);
+  }, [usuario]);
 
-  // Create Publicacion con candidatos compatibles y actualizar publicaciones existentes añadiendo al usuario como candidato
-  const agregarPublicacion = async (nuevaPub) => {    
-    console.log(nuevaPub)
-    try {
-      // Buscar duplicados localmente: No agregar publicacion
-      if (esDuplicado(publicaciones, nuevaPub)) {
-        return "duplicado";
+  // Agregar publicación
+  const agregarPublicacion = useCallback(
+    async (nuevaPub) => {
+      setProcesando(true);
+      try {
+        if (esDuplicado(publicaciones, nuevaPub)) {
+          return "duplicado";
+        }
+
+        await addDoc(collection(db, "PUBLICACIONES"), nuevaPub);
+        return "exito";
+      } catch (error) {
+        console.error("Error al agregar publicación:", error);
+        return "error";
+      } finally {
+        setProcesando(false);
       }
-      // Agregar publicacion
-      // Filtrar publicaciones existentes compatibles 
-      // const pubsMatch = publicaciones.filter(pub => esMatch(nuevaPub, pub));
+    },
+    [publicaciones]
+  );
 
-      // 1. Añadir candidatos a nuevaPub
-      // if (pubsMatch.length) {
-      //   anadirCandidatos(pubsMatch, nuevaPub);
-      // }
-      const colRef = collection(db, "PUBLICACIONES");
-      const docRef = await addDoc(colRef, nuevaPub);
-      // const { nombre, apodo, equipo, nucleo } = nuevaPub;
-      // // 2. Añadir usuario que publica como candidato a las publicaciones que ya existen: en firestore y en local
-      // // Evitar racing si hay muchas publicaciones simultaneas
-      // await Promise.all(
-      //   pubsMatch.map(pubMatch => {
-      //     const docMatchRef = doc(db, "PUBLICACIONES", pubMatch.id);
-      //     return updateDoc(docMatchRef, {
-      //       candidatos: arrayUnion({
-      //         nombre,
-      //         apodo,
-      //         equipo,
-      //         nucleo,
-      //         pubId: docRef.id,
-      //         asignado: false,
-      //       }),
-      //     });
-      //   })
-      // );
-      
-      // TODO: Para que devolvemos esto?
-      return "exito";
-
-    } catch (error) {
-      console.error("Error al agregar publicación:", error);
-      return "error";
-    }
-  };
-
-  const editarPublicacion = async (id, datosActualizados) => {
+  // Editar publicación
+  const editarPublicacion = useCallback(async (id, datosActualizados) => {
+    setProcesando(true);
     try {
       await updateDoc(doc(db, "PUBLICACIONES", id), datosActualizados);
     } catch (error) {
       console.error("Error al editar publicación:", error);
       throw error;
+    } finally {
+      setProcesando(false);
     }
-  };
+  }, []);
 
-  const borrarPublicacion = async (id) => {
-    try {
-      const borrarPub = publicaciones.find(p => p.id === id);
-      
-      if (borrarPub) {
-        
-        // Filtrar publicaciones donde usuario es candidato
-        const publicacionesMatch = publicaciones.filter(p =>          
-          p.candidatos.some(c => c.pubId === id)
+  // Borrar publicación
+  const borrarPublicacion = useCallback(
+    async (id) => {
+      setProcesando(true);
+      try {
+        const borrarPub = publicaciones.find((p) => p.id === id);
+        if (!borrarPub) return;
+
+        // Actualizar publicaciones donde usuario es candidato
+        const publicacionesMatch = publicaciones.filter((p) =>
+          p.candidatos?.some((c) => c.pubId === id)
         );
 
-        for (const pubMatch of publicacionesMatch) {          
-          // Si usuario es asignado cambiar estado
-          const esAsignado = pubMatch.candidatos.some(c => c.pubId === id && c.asignado)
-          // Filtrar candidatos para eliminar a usuario
-          const nuevosCandidatos  = pubMatch.candidatos.filter(c => c.pubId !== id);
-          const nuevosDatosPubMatch = {
-            candidatos: nuevosCandidatos,
-          };
-          if (esAsignado) {
-            nuevosDatosPubMatch.estado = "publicado";
-          }          
+        for (const pubMatch of publicacionesMatch) {
+          const esAsignado = pubMatch.candidatos.some(
+            (c) => c.pubId === id && c.asignado
+          );
+
+          const nuevosCandidatos = pubMatch.candidatos.filter((c) => c.pubId !== id);
+
+          const nuevosDatosPubMatch = { candidatos: nuevosCandidatos };
+          if (esAsignado) nuevosDatosPubMatch.estado = "publicado";
+
           await editarPublicacion(pubMatch.id, nuevosDatosPubMatch);
         }
-      }
-      await deleteDoc(doc(db, "PUBLICACIONES", id));
-    } catch (error) {
-      console.error("Error al borrar publicación:", error);
-      throw error;
-    }
-  };
 
+        await deleteDoc(doc(db, "PUBLICACIONES", id));
+      } catch (error) {
+        console.error("Error al borrar publicación:", error);
+        throw error;
+      } finally {
+        setProcesando(false);
+      }
+    },
+    [publicaciones, editarPublicacion]
+  );
+  
   return {
     publicaciones,
     loading,
+    procesando,
     agregarPublicacion,
-    borrarPublicacion,
     editarPublicacion,
+    borrarPublicacion,
   };
 };

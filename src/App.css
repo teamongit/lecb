@@ -42,6 +42,9 @@
   .margintop-120px {
     margin-top: 120px; 
   }
+  .w-33 {
+    width: 33%;
+  }
   .w-400px {
     max-width: 400px;
   }
@@ -80,6 +83,9 @@
   }
   .fs-09 {
     font-size: 0.9rem;
+  }
+  .fs-3 {
+    font-size: 3rem;
   }
   .hidden {
     display:none;
