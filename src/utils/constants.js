@@ -12,11 +12,11 @@ export const ROUTES = {
   REGISTER: '/register',
   NOAUTORIZADO: '/noautorizado',
 
-  USUARIO_PERFIL: '/usuario/perfil',
-  USUARIO_NOCTURNOS: '/usuario/nocturnos',
-  USUARIO_PIDEVACAS: '/usuario/pidevacas',
-  USUARIO_PUBLICAMBIOS: '/usuario/publicambios',
-  USUARIO_TUTURNERO: '/usuario/tuturnero',
+  USUARIO_PERFIL: '/perfil',
+  USUARIO_NOCTURNOS: '/nocturnos',
+  USUARIO_PIDEVACAS: '/pidevacas',
+  USUARIO_PUBLICAMBIOS: '/publicambios',
+  USUARIO_TUTURNERO: '/tuturnero',
 
   ADMIN_USUARIOS: '/admin/usuarios',
   ADMIN_HVOLUNTARIAS: '/admin/hvoluntarias',

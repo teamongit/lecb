@@ -9,16 +9,17 @@ import AuthGuard from './AuthGuard';
 import Login from '../pages/auth/Login';
 import NoAutorizado from '../pages/auth/NoAutorizado';
 
-import Perfil from '../pages/user/Perfil/Perfil';
+import Perfil from '../pages/Perfil/Perfil';
 // import UserNocturnos from '../pages/user/UserNocturnos';
-import Publicambios from '../pages/user/Publicambios/Publicambios';
-import Tuturnero from '../pages/user/Tuturnero/Tuturnero';
+import Publicambios from '../pages/Publicambios/Publicambios';
+import Tuturnero from '../pages/Tuturnero/Tuturnero';
 // import UserPidevacas from '../pages/user/UserPidevacas';
-import { Pidevacas } from '../pages/user/PideVacas/Pidevacas';
+import { Pidevacas } from '../pages/Pidevacas/Pidevacas';
+
 // import AdminUsuarios from '../pages/admin/AdminUsuarios';
 // import AdminHvoluntarias from '../pages/admin/AdminHvoluntarias';
 // import FurriNocturnos from '../pages/furri/FurriNocturnos';
-// import FurriPidevacas from '../pages/furri/FurriPidevacas';
+import FurriPidevacas from '../pages/Pidevacas/FurriPidevacas';
 // import SuperEscalonada from '../pages/super/SuperEscalonada';
 // import SuperSectores from '../pages/super/SuperSectores';
 
@@ -46,9 +47,9 @@ const AppRoutes = () => {
         <Route element={<AuthGuard rolesPermitidos={Object.values(ROLES)} />}>
           <Route path={ROUTES.USUARIO_PERFIL} element={<Perfil />} />
           {/* <Route path={ROUTES.USUARIO_NOCTURNOS} element={<UserNocturnos />} /> */}
-          <Route path={ROUTES.USUARIO_PIDEVACAS} element={<VacacionesProvider><Pidevacas /></VacacionesProvider>} />
+          <Route path={ROUTES.USUARIO_PIDEVACAS} element={<Pidevacas />} />
           <Route path={ROUTES.USUARIO_PUBLICAMBIOS} element={<Publicambios />}/>
-          <Route path={ROUTES.USUARIO_TUTURNERO} element={<TurnosProvider><Tuturnero /></TurnosProvider>}/>
+          <Route path={ROUTES.USUARIO_TUTURNERO} element={<Tuturnero />}/>
           
 
           {/* ---- Admin Routes ---- */}
@@ -58,10 +59,10 @@ const AppRoutes = () => {
           </Route> */}
 
           {/* ---- Furri Routes ---- */}
-          {/* <Route element={<AuthGuard rolesPermitidos={[ROLES.FURRI]} />}>
-            <Route path={ROUTES.FURRI_NOCTURNOS} element={<FurriNocturnos />} />
-            <Route path={ROUTES.FURRI_PIDEVACAS} element={<VacacionesProvider><FurriPidevacas /></VacacionesProvider> } />
-          </Route> */}
+          <Route element={<AuthGuard rolesPermitidos={[ROLES.FURRI]} />}>
+            {/* <Route path={ROUTES.FURRI_NOCTURNOS} element={<FurriNocturnos />} /> */}
+            <Route path={ROUTES.FURRI_PIDEVACAS} element={<VacacionesProvider><FurriPidevacas/></VacacionesProvider> } />
+          </Route>
 
           {/* ---- Super Routes ---- */}
           {/* <Route element={<AuthGuard rolesPermitidos={[ROLES.SUPER]} />}>
@@ -74,7 +75,7 @@ const AppRoutes = () => {
       {/* ------------- Catch-all Redirect ------------- */}
       <Route path="*" element={
         autenticado && usuario 
-          ? <Navigate to={ROUTES.USUARIO_PERFIL} replace />
+          ? <Navigate to={ROUTES.USUARIO_PUBLICAMBIOS} replace />
           : <Navigate to={ROUTES.LOGIN} replace />
       } />
     </Routes>

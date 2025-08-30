@@ -5,7 +5,8 @@ export function esDuplicado(publicaciones, nuevaPub) {
   return publicaciones.some(pub => 
     pub.tipo === nuevaPub.tipo &&
     pub.nombre === nuevaPub.nombre &&
-    pub.turno === nuevaPub.turno &&        
+    pub.turno === nuevaPub.turno && 
+    pub.modalidad === nuevaPub.modalidad &&
     esMismaFecha(pub.fecha, nuevaPub.fecha)
   );
 }
@@ -22,30 +23,30 @@ export function esMatch(nuevaPub, pub) {
   // Estado publicado
   const esPublicado = pub.estado === "publicado";
   if (!esPublicado) return false;
-  // console.log("publicado ok");
+  
   // Nucleo compatible
   const mismoNucleo = nuevaPub.nucleo.includes("RUTA") 
     ? pub.nucleo.includes("RUTA")     // nuevaPub y pub son RUTA
     : nuevaPub.nucleo === pub.nucleo; // nuevaPub y pub son TMA
   if (!mismoNucleo) return false;
-  // console.log("mismo nucleo ok");  
+   
   // Modalidad compatible
   const mismaModalidad = nuevaPub.modalidad.some(m => pub.modalidad.includes(m));
   if (!mismaModalidad) return false;
-  // console.log("misma modalidad ok");  
+  
   // Fecha compatible
   if (!esMismaFecha(nuevaPub.fecha, pub.fecha)) return false;
-  // console.log("misma fecha ok");
+  
     
   // Funcion compatible
   const funcionCompatible = !pub.funcion.length || tienenDuplicados(nuevaPub.funcion, pub.funcion);
   if (!funcionCompatible) return false;
-  // console.log("funcion compatible ok");
+  
   // Descartar compatibilidad segun tipo de publicacion
   // Servicio compatible
   const mismoServicio = nuevaPub.servicio === pub.servicio;
   if (!mismoServicio) return false;
-  // console.log("mismo servicio ok");
+  
   // Si es de noche, comparar el nucleo               
   const esNoche = nuevaPub.servicio === "N";
   if (esNoche) {
@@ -55,12 +56,12 @@ export function esMatch(nuevaPub, pub) {
   // Duracion compatible
   const duracionCompatible = pub.duracion === "Cualquiera" || nuevaPub.duracion === "Cualquiera" || nuevaPub.duracion === pub.duracion;
   if (!duracionCompatible) return false;
-  // console.log("duracion compatible ok");
+  
   if (nuevaPub.tipo === "quitar") {
     // Tipo compatible
     const tipoCompatible = pub.tipo === "hacer"; // tipo contrario
     if (!tipoCompatible) return false;
-    // console.log("tipo compatible ok");
+  
   }  
 
   // Descartar compatibilidad segun tipo de publicacion
@@ -68,10 +69,10 @@ export function esMatch(nuevaPub, pub) {
     // Tipo compatible
     const tipoCompatible = pub.tipo === "quitar"; // tipo contrario
     if (!tipoCompatible) return false;
-    // console.log("tipo compatible ok");
+  
   }  
   // Es match
-  // console.log("es match");
+  
   return true;
 }
 

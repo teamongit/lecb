@@ -1,75 +1,77 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { doc, onSnapshot, setDoc } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
-import { obtenerProximosCiclos } from "../utils/proximosCiclos";
+// import { doc, onSnapshot, setDoc } from "firebase/firestore";
+// import { db } from "../firebase/firebaseConfig";
+// import { obtenerProximosCiclos } from "../pages/PideVacas/proximosCiclos.js";
+import { vacaciones as carga } from "../pages/PideVacas/vacaciones.js";
 
 const VacacionesContext = createContext();
 
 export function VacacionesProvider({ children }) {
-  const [vacaciones, setVacaciones] = useState(null);
-  const [integrantes, setIntegrantes] = useState(null);
-  const [cantidades, setCantidades] = useState(null);
-  const [ciclos, setCiclos] = useState(null);
-  const [proximosCiclos, setProximosCiclos] = useState(null);
-  const [normas, setNormas] = useState(null);
+  const [vacaciones, setVacaciones] = useState(carga);
+  const [integrantes, setIntegrantes] = useState(carga.integrantes);
+  const [ciclos, setCiclos] = useState(carga.ciclos);
+  // const [proximosCiclos, setProximosCiclos] = useState(null);
+  // const [normas, setNormas] = useState(null);
 
-  useEffect(() => {
+  // useEffect(() => {
     // const docRef = doc(db, "VACACIONES", "BACKUP");
-    const docRef = doc(db, "VACACIONES", "LECB_RUTA_3E");
+    // const docRef = doc(db, "VACACIONES", "LECB_RUTA_3E");
 
-    const unsubscribe = onSnapshot(
-      docRef,
-      (docSnap) => {
-        if (docSnap.exists()) {
-          // separar los contextos para prevenir re-renderizados posteriores
-          setVacaciones(docSnap.data());
-          setCantidades(docSnap.data().integrantes);
-          setIntegrantes(docSnap.data().integrantes);
-          setCiclos(docSnap.data().ciclos);
-          setNormas(docSnap.data().normas);
+    // const unsubscribe = onSnapshot(
+    //   docRef,
+    //   (docSnap) => {
+    //     if (docSnap.exists()) {
+    //       // separar los contextos para prevenir re-renderizados posteriores
+    //       setVacaciones(docSnap.data());
+    //       setCantidades(docSnap.data().integrantes);
+    //       setIntegrantes(docSnap.data().integrantes);
+    //       setCiclos(docSnap.data().ciclos);
+    //       setNormas(docSnap.data().normas);
 
-          // console.log("useVacaciones:", docSnap.data().integrantes.map(i => i.nombre));
+    //       // console.log("useVacaciones:", docSnap.data().integrantes.map(i => i.nombre));
 
-        } else {
-          console.warn("No existe el documento.");
+    //     } else {
+    //       console.warn("No existe el documento.");
 
-        }
-      },
-      (error) => {
-        console.error("Error al escuchar el documento:", error);
+    //     }
+    //   },
+    //   (error) => {
+    //     console.error("Error al escuchar el documento:", error);
 
-      }
-    );
+    //   }
+    // );
 
-    // Limpieza del listener al desmontar
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
+    // // Limpieza del listener al desmontar
+    // return () => unsubscribe();
+  //   setVacaciones(vacaciones);
     
-    setProximosCiclos(obtenerProximosCiclos());
-  }, []);
+  // }, []);
 
-  const guardarVacaciones = async () => {
-    try {
-      const ref = doc(db, "VACACIONES", "2026_LECB_RUTA_3_E");
-      await setDoc(ref, vacaciones, { merge: true });
-      console.log("Vacaciones guardadas:", vacaciones);
-    } catch (error) {
-      console.error("Error al guardar vacaciones:", error);
-    }
-  };
+  // useEffect(() => {
+    
+  //   setProximosCiclos(obtenerProximosCiclos());
+  // }, []);
+
+  // const guardarVacaciones = async () => {
+  //   try {
+  //     const ref = doc(db, "VACACIONES", "2026_LECB_RUTA_3_E");
+  //     await setDoc(ref, vacaciones, { merge: true });
+  //     console.log("Vacaciones guardadas:", vacaciones);
+  //   } catch (error) {
+  //     console.error("Error al guardar vacaciones:", error);
+  //   }
+  // };
 
   return (
     <VacacionesContext.Provider
       value={{ 
         vacaciones, setVacaciones, 
         integrantes, setIntegrantes,
-        cantidades, setCantidades,
-        proximosCiclos, setProximosCiclos,
+        
+        // proximosCiclos, setProximosCiclos,
         ciclos, setCiclos,
-        normas, setNormas,
-        guardarVacaciones 
+        // normas, setNormas,
+        // guardarVacaciones 
       }}
     >
       {children}

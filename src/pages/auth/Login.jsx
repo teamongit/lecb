@@ -7,6 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { db, auth } from "../../firebase/firebaseConfig";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { getDoc, doc, setDoc, updateDoc, serverTimestamp, deleteField } from "firebase/firestore";
+import { useToast } from "../../context/ToastContext";
 
 function PasswordInput({ label, name, value, setValue }) {
   const [show, setShow] = useState(false);
@@ -38,10 +39,12 @@ function PasswordInput({ label, name, value, setValue }) {
   );
 }
 
-function FormRegister({ setViewLogin, setMensaje }) {
+function FormRegister({ setViewLogin }) {
+  const { triggerToast } = useToast();
   const [nombres, setNombres] = useState([]);
   const [password1, setPassword1] = useState("");
   const [password2, setPassword2] = useState("");
+  const [telefonoFocused, setTelefonoFocused] = useState(false);
 
   useEffect(() => {
     const cargarNombres = async () => {
@@ -56,6 +59,7 @@ function FormRegister({ setViewLogin, setMensaje }) {
           setNombres(keys);
         }
       } catch (error) {
+        triggerToast("Error al cargar nombres", {severity: "error", autoHideDuration: 2500});
         console.error("Error al cargar nombresPorRegistrar:", error);
       }
     };
@@ -78,26 +82,18 @@ function FormRegister({ setViewLogin, setMensaje }) {
     };
 
     if (password1 !== password2) {
-      setMensaje({
-        texto: "Las contraseñas no coinciden",
-        clase: "danger"
-      });
+      triggerToast("Las contraseñas no coinciden", {severity: "error", autoHideDuration: 2500});
       return;
     }
 
     if (!nombres.includes(valores.nombre)) {
-      setMensaje({
-        texto: "El nombre seleccionado no es válido",
-        clase: "danger",
-      });
+      triggerToast("El nombre seleccionado no es válido", {severity: "error", autoHideDuration: 2500});    
       return;
     }
 
     try {  
-      setMensaje({
-        texto: "Registrando usuario...",
-        clase: "info"
-      }); 
+      triggerToast("Registrando usuario...", {severity: "info", autoHideDuration: 1500});
+
       // TODO: 
       // Validar que el nombre no esté ya registrado
       // Validar que el email no esté ya registrado
@@ -105,10 +101,7 @@ function FormRegister({ setViewLogin, setMensaje }) {
       const usuarioDocRef = doc(db, "USUARIOS", valores.nombre);
       const usuarioDocSnap = await getDoc(usuarioDocRef);
       if (usuarioDocSnap.exists()) {
-        setMensaje({
-          texto: "El nombre seleccionado ya está registrado",
-          clase: "danger",
-        });
+        triggerToast("El nombre seleccionado ya está registrado", {severity: "error", autoHideDuration: 2500});
         return;
       }
 
@@ -119,9 +112,8 @@ function FormRegister({ setViewLogin, setMensaje }) {
       try {
         await sendEmailVerification(registrado);
       } catch (error) {
-        console.error("Error al enviar email de verificación:", error);
         let textoError = "Error al registrar usuario";
-
+        
         if (error.code === "auth/email-already-in-use") {
           textoError = "El email ya está en uso";
         } else if (error.code === "auth/invalid-email") {
@@ -129,30 +121,21 @@ function FormRegister({ setViewLogin, setMensaje }) {
         } else if (error.code === "auth/weak-password") {
           textoError = "La contraseña es demasiado débil (mínimo 6 caracteres)";
         }
-
-        setMensaje({
-          texto: textoError,
-          clase: "danger",
-        });
+        triggerToast(textoError, {severity: "error", autoHideDuration: 2500});        
+        console.error(error);
       }
       
       // 2. Doc lista usuarios sin registrar
       const listaDocRef = doc(db, "USUARIOS", "#LECB");
       const listaDocSnap = await getDoc(listaDocRef);
       if (!listaDocSnap.exists()) {
-        setMensaje({
-          texto: "Error: lista temporal de usuarios no encontrada",
-          clase: "danger",
-        });
+        triggerToast("Error: lista de usuarios no encontrada", {severity: "error", autoHideDuration: 2500});
         return;
       }
       // 3. Datos extra guardados en lista temporal para ese nombre
       const datosTemporales = listaDocSnap.data()[valores.nombre];
         if (!datosTemporales) {
-        setMensaje({
-          texto: "Error: datos temporales no encontrados para el nombre seleccionado",
-          clase: "danger",
-        });
+          triggerToast("Error: datos no encontrados para el nombre seleccionado", {severity: "error", autoHideDuration: 2500});        
         return;
       }
 
@@ -170,10 +153,7 @@ function FormRegister({ setViewLogin, setMensaje }) {
       });
           
       // 6. Login
-      setMensaje({
-        texto: "Usuario registrado con éxito. Revisa tu correo para verificar tu cuenta.",
-        clase: "success",
-      });
+      triggerToast("Registrado. Verificar cuenta (email).", {severity: "info"});
       setViewLogin(true);
           
     } catch (error) {
@@ -187,10 +167,8 @@ function FormRegister({ setViewLogin, setMensaje }) {
       } else if (error.code === "auth/weak-password") {
         textoError = "La contraseña es demasiado débil (mínimo 6 carácteres)";
       }
-      setMensaje({
-        texto: textoError,
-        clase: "danger",
-      });
+      triggerToast(textoError, {severity: "error", autoHideDuration: 2500});
+      
     }
   };
 
@@ -217,8 +195,20 @@ function FormRegister({ setViewLogin, setMensaje }) {
       <Form.Group className="mb-3" controlId="telefono">
         <InputGroup>
           <InputGroup.Text className="w-100px">Telefono</InputGroup.Text>
-          <Form.Control type="number" name="telefono" placeholder="Opcional" />
+          <Form.Control 
+            type="text" 
+            name="telefono" 
+            placeholder="Telefono" 
+            onFocus={() => setTelefonoFocused(true)}
+            onBlur={() => setTelefonoFocused(false)}
+          />          
         </InputGroup>
+        {telefonoFocused && (
+          <Form.Text className="text-muted">
+            Añade el código de país (+34...)
+          </Form.Text>
+        )}
+        
       </Form.Group>
 
       <InputGroup>
@@ -251,43 +241,39 @@ function FormRegister({ setViewLogin, setMensaje }) {
   );
 }
 
-function FormLogin({ setViewLogin, setMensaje }) {
-  const { login, resetPw } = useAuth();
+function FormLogin({ setViewLogin }) {
+  const { login, recordarContrasena } = useAuth();
+  const { triggerToast } = useToast();
   const [password, setPassword] = useState("");
   
 
-  const handleResetPw = async (e) => {    
+  const handleRecordarContrasena = async (e) => {    
     e.preventDefault();
     const email = document.querySelector("input[name='email']").value.trim();    
-    if (!email) {
-      alert("Ingresa tu email primero");
+    if (!email) {      
+      triggerToast("Ingresa tu email primero", {severity: "warning"});
       return;
     }
-    const result = await resetPw(email);
-    alert(result.success ? result.message : "Error: " + result.message);
+    const result = await recordarContrasena(email);
+    triggerToast(result.msg, result.severity);
   };
 
 
   const Entrar = async (e) => {
     e.preventDefault();
-    setMensaje({
-      texto: "Iniciando sesión...",
-      clase: "info"
-    });
     const form = e.target;
     const email = form.elements["email"].value;
     const password = form.elements["password"].value;
 
+    triggerToast("Iniciando sesión...", { severity: "info", autoHideDuration: 1000 });
+
     try {
       await login(email, password);
     } catch (error) {
-      console.error("Error al iniciar sesion:", error);
-      setMensaje({
-        texto: "Usuario o contraseña incorrectos",
-        clase: "danger"
-      });    
-    }  
-  }; 
+      console.error(error);
+      triggerToast("Usuario o contraseña incorrectos", { severity: "error" });
+    }
+  };
 
   return (
     <Form onSubmit={Entrar}>
@@ -303,9 +289,8 @@ function FormLogin({ setViewLogin, setMensaje }) {
         id="btn-recordar" 
         variant="link" 
         className="text-secondary text-decoration-underline mb-5 p-0"
-        onClick={handleResetPw}
+        onClick={handleRecordarContrasena}
       >
-
         Recordar contraseña al correo
       </Button>
 
@@ -327,33 +312,7 @@ function FormLogin({ setViewLogin, setMensaje }) {
 
 export default function Login() {
   const [viewLogin, setViewLogin] = useState(true);
-  const [mensaje, setMensaje] = useState({
-    texto: "",
-    clase: ""
-  });
   
-  // const { autenticado, esAutenticado, usuario, loading, login, logout } = useAuth(); 
-  // const navigate = useNavigate();       
-  
-  // useEffect(() => {
-  //   // Cargando...
-  //   if (loading) return;
-  //   // No hay usuario
-  //   if (!user) return;
-  //   // No ha verficado email
-  //   if (!user.emailVerified) {
-  //     setMensaje({
-  //       texto: "Verifica tu correo",
-  //       clase: "info"
-  //     });
-  //     logout();
-  //     return;
-  //   }
-  //   // Esperar a cargar los datos de usuario y redirigir
-  //   // if (userData) navigate("/user/publicambios");
-    
-  // }, [loading, user, userData, navigate]);
-
   return (
     <Card className="m-3 shadow rounded-3">
       <Card.Header className="text-white p-3 fs-1 mi-color-fondo shadow">
@@ -366,13 +325,10 @@ export default function Login() {
         </Container>
         <br />
         {viewLogin 
-          ? <FormLogin setViewLogin={setViewLogin} setMensaje={setMensaje}/> 
-          : <FormRegister setViewLogin={setViewLogin} setMensaje={setMensaje}/>
+          ? <FormLogin setViewLogin={setViewLogin} /> 
+          : <FormRegister setViewLogin={setViewLogin} />
         }
-        <br />
-        <Alert variant={mensaje.clase}>
-          {mensaje.texto}
-        </Alert>
+        <br />       
       </Card.Body>
     </Card>
   );

@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Navbar, Offcanvas, Nav, Container } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Power } from 'react-bootstrap-icons';
-import { useAuth } from "../hooks/useAuth"; 
-import { TeamOnLogo } from '../components/Logo';
-import { ROUTES } from "../utils/constants";
+import { useAuth } from "@/hooks/useAuth"; 
+import { TeamOnLogo } from '@/components/Logo';
+import { ROUTES } from "@/utils/constants";
 
 const NavBarItem = ({ icon, label, to, onClose }) => {
   const location = useLocation();
@@ -71,28 +71,30 @@ const NavBar = () => {
   const handleShow = () => setShow(true);
 
   // Menus dinámicos
-  const adminItems = [
-    { label: "Usuarios", icon: "bi-1-circle", link: "/admin/usuarios" },
-    { label: "HVoluntarias", icon: "bi-2-circle", link: "/admin/hvoluntarias" }
-  ];
+  // const adminItems = [
+  //   { label: "Usuarios", icon: "bi-1-circle", link: "/admin/usuarios" },
+  //   { label: "HVoluntarias", icon: "bi-2-circle", link: "/admin/hvoluntarias" }
+  // ];
 
-  const furriItems = [
-    { label: "Nocturnos", icon: "bi-1-circle", link: "/furri/nocturnos" },
-    { label: "Pidevacas", icon: "bi-2-circle", link: "/furri/pidevacas" }
-  ];
+  // const furriItems = [
+  //   { label: "Nocturnos", icon: "bi-1-circle", link: "/furri/nocturnos" },
+  //   { label: "Pidevacas", icon: "bi-2-circle", link: "/furri/pidevacas" }
+  // ];
 
-  const superItems = [
-    { label: "Escalonada", icon: "bi-1-circle", link: "/super/escalonada" },
-    { label: "Sectores", icon: "bi-2-circle", link: "/super/sectores" }
-  ];
+  // const superItems = [
+  //   { label: "Escalonada", icon: "bi-1-circle", link: "/super/escalonada" },
+  //   { label: "Sectores", icon: "bi-2-circle", link: "/super/sectores" }
+  // ];
   
   return (
     <>
       <Navbar className="text-dark p-2 mb-3 shadow px-3" bg="dark" data-bs-theme="dark">
         <Container fluid className="d-flex align-items-center">
           <Navbar.Brand onClick={handleShow} className="d-flex gap-3 align-items-center" role="button">
-            
-            <TeamOnLogo className="fs-3"/>
+            <div className="d-flex flex-column">
+              <TeamOnLogo className="fs-3"/>
+              <div className="fs-05 text-center text-muted">abrir menu</div>
+            </div>
             <div className="d-flex flex-column">
               <span className="text-white">teamOn!</span>
               <span className="text-white-50 fs-07">{usuario?.apodo}</span>

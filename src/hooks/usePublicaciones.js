@@ -63,14 +63,14 @@ export const usePublicaciones = () => {
       setProcesando(true);
       try {
         if (esDuplicado(publicaciones, nuevaPub)) {
-          return "duplicado";
+          throw new Error("duplicado");
         }
 
         await addDoc(collection(db, "PUBLICACIONES"), nuevaPub);
-        return "exito";
+        
       } catch (error) {
         console.error("Error al agregar publicación:", error);
-        return "error";
+        throw error;
       } finally {
         setProcesando(false);
       }
@@ -81,7 +81,7 @@ export const usePublicaciones = () => {
   // Editar publicación
   const editarPublicacion = useCallback(async (id, datosActualizados) => {
     setProcesando(true);
-    try {
+    try {      
       await updateDoc(doc(db, "PUBLICACIONES", id), datosActualizados);
     } catch (error) {
       console.error("Error al editar publicación:", error);
@@ -97,7 +97,7 @@ export const usePublicaciones = () => {
       setProcesando(true);
       try {
         const borrarPub = publicaciones.find((p) => p.id === id);
-        if (!borrarPub) return;
+        if (!borrarPub) throw new Error("no-encontrado");
 
         // Actualizar publicaciones donde usuario es candidato
         const publicacionesMatch = publicaciones.filter((p) =>
